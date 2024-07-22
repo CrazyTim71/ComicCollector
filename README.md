@@ -38,6 +38,7 @@ To debug the program, some changes to the build config are needed. You need to a
 GOARCH=amd64;GOOS=windows;CGO_ENABLED=1
 ```
 
-In case the debug isn't working, you can generate the build config for your ide with the following files:  
+In case the debug isn't working, you can generate the build config for your ide with the following command.  
+Replace the .idea folder with the generated one and delete the generated ComicCollector folder. 
 Goland: ``wails init -n ComicCollector -ide goland``  
 VSCode: ``wails init -n ComicCollector -ide vscode``
