@@ -1,16 +1,15 @@
-CREATE TABLE `users` (
+CREATE TABLE `user` (
   `id` integer PRIMARY KEY,
   `username` string,
-  `password_hash` string,
-  `permissions` integer
+  `password_hash` string
 );
 
-CREATE TABLE `owners` (
+CREATE TABLE `owner` (
   `id` integer PRIMARY KEY,
   `name` string
 );
 
-CREATE TABLE `books` (
+CREATE TABLE `book` (
   `id` integer PRIMARY KEY,
   `title` integer,
   `number` integer,
@@ -19,7 +18,7 @@ CREATE TABLE `books` (
   `cover_image` string,
   `description` string,
   `notes` string,
-  `publisher` integer,
+  `publishers` integer,
   `authors` integer,
   `book_type` integer UNIQUE,
   `book_edition` integer,
@@ -27,77 +26,88 @@ CREATE TABLE `books` (
   `isbn` string,
   `price` string,
   `count` integer,
-  `location` string,
+  `location` integer,
   `owner` integer
 );
 
-CREATE TABLE `permissions` (
+CREATE TABLE `permission` (
   `id` integer PRIMARY KEY,
   `name` string,
   `description` string
 );
 
-CREATE TABLE `roles` (
+CREATE TABLE `role` (
   `id` integer PRIMARY KEY,
   `name` string,
   `description` string
 );
 
-CREATE TABLE `user_roles` (
+CREATE TABLE `user_role` (
+  `id` integer PRIMARY KEY,
   `user_id` integer,
   `role_id` integer
 );
 
-CREATE TABLE `user_permissions` (
+CREATE TABLE `user_permission` (
+  `id` integer PRIMARY KEY,
   `user_id` integer,
-  `permission_id` integer
+  `permission_ids` integer
 );
 
-CREATE TABLE `role_permissions` (
+CREATE TABLE `role_permission` (
+  `id` integer PRIMARY KEY,
   `role_id` integer,
   `permission_id` integer
 );
 
-CREATE TABLE `publishers` (
+CREATE TABLE `publisher` (
   `id` integer PRIMARY KEY,
   `name` string,
   `website_url` string,
   `country` string
 );
 
-CREATE TABLE `authors` (
+CREATE TABLE `author` (
   `id` integer PRIMARY KEY,
   `name` string
 );
 
-CREATE TABLE `book_types` (
+CREATE TABLE `book_type` (
   `id` integer PRIMARY KEY,
   `name` string
 );
 
-CREATE TABLE `book_editions` (
+CREATE TABLE `location` (
+  `id` integer PRIMARY KEY,
+  `name` string,
+  `description` string
+);
+
+CREATE TABLE `book_edition` (
   `id` integer PRIMARY KEY,
   `name` string
 );
 
-ALTER TABLE `books` ADD FOREIGN KEY (`publisher`) REFERENCES `publishers` (`id`);
+ALTER TABLE `book` ADD FOREIGN KEY (`publishers`) REFERENCES `publisher` (`id`);
 
-ALTER TABLE `books` ADD FOREIGN KEY (`authors`) REFERENCES `authors` (`id`);
+ALTER TABLE `book` ADD FOREIGN KEY (`authors`) REFERENCES `author` (`id`);
 
-ALTER TABLE `books` ADD FOREIGN KEY (`book_type`) REFERENCES `book_types` (`id`);
+ALTER TABLE `book` ADD FOREIGN KEY (`book_type`) REFERENCES `book_type` (`id`);
 
-ALTER TABLE `books` ADD FOREIGN KEY (`book_edition`) REFERENCES `book_editions` (`id`);
+ALTER TABLE `book` ADD FOREIGN KEY (`book_edition`) REFERENCES `book_edition` (`id`);
 
-ALTER TABLE `books` ADD FOREIGN KEY (`owner`) REFERENCES `owners` (`id`);
+ALTER TABLE `book` ADD FOREIGN KEY (`location`) REFERENCES `location` (`id`);
 
-ALTER TABLE `user_roles` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `book` ADD FOREIGN KEY (`owner`) REFERENCES `owner` (`id`);
 
-ALTER TABLE `user_roles` ADD FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`);
+ALTER TABLE `user_role` ADD FOREIGN KEY (`user_id`) REFERENCES `user` (`id`);
 
-ALTER TABLE `user_permissions` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `user_role` ADD FOREIGN KEY (`role_id`) REFERENCES `role` (`id`);
 
-ALTER TABLE `permissions` ADD FOREIGN KEY (`id`) REFERENCES `user_permissions` (`permission_id`);
+ALTER TABLE `user_permission` ADD FOREIGN KEY (`user_id`) REFERENCES `user` (`id`);
 
-ALTER TABLE `role_permissions` ADD FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`);
+ALTER TABLE `permission` ADD FOREIGN KEY (`id`) REFERENCES `user_permission` (`permission_ids`);
 
-ALTER TABLE `role_permissions` ADD FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`);
+ALTER TABLE `role_permission` ADD FOREIGN KEY (`role_id`) REFERENCES `role` (`id`);
+
+ALTER TABLE `role_permission` ADD FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`);
