@@ -16,7 +16,7 @@ func InitDatabase() error {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		log.Println("You must set your 'MONGODB_URI' environmental variable.")
-		return errors.New("You must set your 'MONGODB_URI' environmental variable.")
+		return errors.New("you must set your 'MONGODB_URI' environmental variable")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
