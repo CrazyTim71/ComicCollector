@@ -1,22 +1,20 @@
 package database
 
 import (
+	"ComicCollector/main/backend/env"
 	"context"
-	"errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 	"time"
 )
 
 var MongoDB *mongo.Database
 
-func InitDatabase() error {
-	uri := os.Getenv("MONGODB_URI")
+func InitDatabase() bool {
+	uri := env.GetDatabaseURI()
 	if uri == "" {
-		log.Println("You must set your 'MONGODB_URI' environmental variable.")
-		return errors.New("you must set your 'MONGODB_URI' environmental variable")
+		log.Fatal("You must set your 'MONGODB_URI' environmental variable.")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -24,15 +22,14 @@ func InitDatabase() error {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Println(err)
-		return err
+		log.Fatal(err)
 	}
 
-	dbName := os.Getenv("MONGODB_DBNAME")
+	dbName := env.GetDatabaseName()
 	if dbName == "" {
-		log.Println("The 'MONGODB_DBNAME' environmental variable is not set. Defaulting to 'TimeCraft'.")
-		dbName = "ComicCollector"
+		log.Fatal("The 'MONGODB_DBNAME' environmental variable is not set.")
 	}
 	MongoDB = client.Database(dbName)
-	return nil
+
+	return true
 }

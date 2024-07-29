@@ -1,7 +1,7 @@
 package router
 
 import (
-	v1 "ComicCollector/backend/api/v1"
+	v1 "ComicCollector/main/backend/api/v1"
 	"github.com/gin-gonic/gin"
 )
 
