@@ -5,8 +5,9 @@ import (
 )
 
 func LoginHandler(rg *gin.RouterGroup) {
-	rg.POST("/", func(c *gin.Context) {
-
+	rg.POST("", func(c *gin.Context) {
+		// TODO: generate jwt
+		// TODO: make middleware to check the jwt token on every endpoint
 	})
 
 }

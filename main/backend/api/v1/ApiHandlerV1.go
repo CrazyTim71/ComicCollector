@@ -5,6 +5,7 @@ import (
 )
 
 func ApiHandler(rg *gin.RouterGroup) {
+	// TODO: remove the test handler later
 	test := rg.Group("/test")
 	TestHandler(test)
 

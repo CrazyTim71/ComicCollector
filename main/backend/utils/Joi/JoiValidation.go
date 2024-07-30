@@ -1,4 +1,4 @@
-package utils
+package Joi
 
 import "github.com/softbrewery/gojoi/pkg/joi"
 
