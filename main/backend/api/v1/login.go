@@ -51,9 +51,22 @@ func LoginHandler(rg *gin.RouterGroup) {
 			return
 		} else {
 			if crypt.CheckPasswordHash(password, existingUser.Password) {
-				// TODO: generate jwt
-				// TODO: set cookie
+
+				// generate a jwt token that will authenticate the user
+				jwtToken, err := crypt.GenerateJwtToken(existingUser.ID)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Failed to generate a token", "error": true})
+					log.Println(err)
+					return
+				}
+
+				// save the jwt token as cookie (valid for 24 hours)
+				duration := int((time.Hour * 24).Seconds())
+				c.SetCookie("authentication", jwtToken, duration, "/", "", false, false)
+
 				// TODO: redirect to the dashboard
+				//c.Redirect(http.StatusSeeOther, "/dashboard")
+				c.JSON(http.StatusOK, gin.H{"msg": "Successfully logged in"})
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Invalid credentials", "error": true})
 				log.Println(err)

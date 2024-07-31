@@ -4,6 +4,7 @@ import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/env"
 	"ComicCollector/main/backend/router"
+	"ComicCollector/main/backend/utils/crypt"
 	"embed"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -25,6 +26,9 @@ func main() {
 
 	// init the db
 	database.InitDatabase()
+
+	// load the RSA key
+	crypt.InitRSAKey()
 
 	// create the router
 	r := gin.Default()

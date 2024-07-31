@@ -11,6 +11,7 @@ var SERVER_PORT = "8080"
 var ENV_FILE_LOCATION = ".env"
 var MONGODB_DBNAME = "ComicCollector"
 var MONGODB_URI = ""
+var RSA_FILENAME = "rsa_private_key.pem"
 
 func InitEnvironment() bool {
 	if err := godotenv.Load(ENV_FILE_LOCATION); err != nil {
@@ -39,10 +40,11 @@ func GetDatabaseURI() string {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		log.Println("No 'MONGODB_URI' variable set in .env file")
-		return ""
+		log.Println("Defaulting to " + MONGODB_URI)
+	} else {
+		MONGODB_URI = uri
 	}
 
-	MONGODB_URI = uri
 	return MONGODB_URI
 }
 
@@ -51,8 +53,21 @@ func GetDatabaseName() string {
 	if dbName == "" {
 		log.Println("No 'MONGODB_DBNAME' variable set in .env file")
 		log.Println("Defaulting to " + MONGODB_DBNAME)
+	} else {
+		MONGODB_DBNAME = dbName
 	}
 
-	MONGODB_DBNAME = dbName
 	return MONGODB_DBNAME
+}
+
+func GetRSAFilename() string {
+	rsaFilename := os.Getenv("RSA_FILENAME")
+	if rsaFilename == "" {
+		log.Println("No 'RSA_FILENAME' variable set in .env file")
+		log.Println("Defaulting to " + RSA_FILENAME)
+	} else {
+		RSA_FILENAME = rsaFilename
+	}
+
+	return RSA_FILENAME
 }
