@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func RegisterHandler(rg *gin.RouterGroup) {
@@ -81,6 +82,8 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		newUser.ID = primitive.NewObjectID()
 		newUser.Username = username
 		newUser.Password = hashedPW
+		newUser.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+		newUser.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 
 		_, err = database.MongoDB.Collection("user").InsertOne(c, newUser, options.InsertOne())
 		if err != nil {

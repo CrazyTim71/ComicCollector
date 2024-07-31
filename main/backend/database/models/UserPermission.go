@@ -5,6 +5,9 @@ import (
 )
 
 type UserPermission struct {
-	ID            primitive.ObjectID   `json:"id" bson:"_id"`
-	PermissionIds []primitive.ObjectID `json:"permission_ids" bson:"permission_ids"`
+	ID           primitive.ObjectID   `json:"id" bson:"_id"`
+	UserId       primitive.ObjectID   `json:"user_id" bson:"user_id"`
+	PermissionId []primitive.ObjectID `json:"permission_id" bson:"permission_id"`
+	CreatedAt    primitive.DateTime   `json:"created_at" bson:"created_at"`
+	UpdatedAt    primitive.DateTime   `json:"updated_at" bson:"updated_at"`
 }
