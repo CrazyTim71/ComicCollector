@@ -5,6 +5,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/utils/Joi"
 	"ComicCollector/main/backend/utils/crypt"
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -57,7 +58,10 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		username := strings.ToLower(requestBody.Username)
 		password := requestBody.Password
 
-		err := database.MongoDB.Collection("user").FindOne(c, bson.M{"username": username}).Decode(&existingUser)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		err := database.MongoDB.Collection("user").FindOne(ctx, bson.M{"username": username}).Decode(&existingUser)
 		if err == nil { // err == nil in case the user already exists
 			c.JSON(http.StatusConflict, gin.H{"msg": "This username already exists", "error": true})
 			log.Println(err)
@@ -85,7 +89,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		newUser.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 		newUser.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 
-		_, err = database.MongoDB.Collection("user").InsertOne(c, newUser, options.InsertOne())
+		_, err = database.MongoDB.Collection("user").InsertOne(ctx, newUser, options.InsertOne())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 			log.Println(err)
