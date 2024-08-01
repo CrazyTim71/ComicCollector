@@ -1,10 +1,13 @@
 package env
 
 import (
+	"embed"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
+
+const VERSION = "v0.1"
 
 var SERVER_HOST = "127.0.0.1"
 var SERVER_PORT = "8080"
@@ -12,6 +15,8 @@ var ENV_FILE_LOCATION = ".env"
 var MONGODB_DBNAME = "ComicCollector"
 var MONGODB_URI = ""
 var RSA_FILENAME = "rsa_private_key.pem"
+
+var Files embed.FS
 
 func InitEnvironment() bool {
 	if err := godotenv.Load(ENV_FILE_LOCATION); err != nil {

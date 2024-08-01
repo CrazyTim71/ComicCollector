@@ -1,7 +1,7 @@
 package crypt
 
 import (
-	"ComicCollector/main/backend/env"
+	"ComicCollector/main/backend/utils/env"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"

@@ -1,7 +1,7 @@
 package database
 
 import (
-	"ComicCollector/main/backend/env"
+	"ComicCollector/main/backend/utils/env"
 	"context"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
