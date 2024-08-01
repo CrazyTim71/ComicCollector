@@ -37,7 +37,9 @@ func main() {
 
 	// create the router
 	r := gin.Default()
-	router.InitRouter(r)
+	router.InitBackendRoutes(r)
+	router.InitFrontendRoutes(r)
+	router.InitStaticAssets(r)
 
 	// start the server
 	address := env.GetServerAddress()

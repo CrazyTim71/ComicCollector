@@ -96,8 +96,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 			return
 		}
 
-		// TODO: redirect to the login
-		// c.Redirect(http.StatusSeeOther, "/login")
-		c.JSON(http.StatusOK, gin.H{"msg": "User was created successfully"})
+		c.Redirect(http.StatusSeeOther, "/login")
+		//c.JSON(http.StatusOK, gin.H{"msg": "User was created successfully"})
 	})
 }

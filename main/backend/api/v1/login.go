@@ -62,11 +62,11 @@ func LoginHandler(rg *gin.RouterGroup) {
 
 				// save the jwt token as cookie (valid for 24 hours)
 				duration := int((time.Hour * 24).Seconds())
-				c.SetCookie("authentication", jwtToken, duration, "/", "", false, false)
+				c.SetCookie("auth_token", jwtToken, duration, "/", "", false, false)
 
-				// TODO: redirect to the dashboard
-				//c.Redirect(http.StatusSeeOther, "/dashboard")
-				c.JSON(http.StatusOK, gin.H{"msg": "Successfully logged in"})
+				//c.JSON(http.StatusOK, gin.H{"msg": "Successfully logged in"})
+
+				c.Redirect(http.StatusSeeOther, "/dashboard")
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Invalid credentials", "error": true})
 				log.Println(err)
@@ -74,5 +74,4 @@ func LoginHandler(rg *gin.RouterGroup) {
 			}
 		}
 	})
-
 }
