@@ -1,116 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <title>Login</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+{{define "title"}}ComicCollector{{end}}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-container {
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-            width: 300px;
-        }
-        .login-container h2 {
-            margin-bottom: 20px;
-        }
-        .login-container input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .login-container button {
-            width: 100%;
-            padding: 10px;
-            background-color: #28a745;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .login-container button:hover {
-            background-color: #218838;
-        }
-    </style>
-</head>
-<body>
+<html lang="en" data-bs-theme="dark">
+{{template "head"}}
 
-{{/*    {{template "head"}}*/}}
+{{/*{{define "content"}}*/}}
+{{/*    {{template "topdoc"}}*/}}
+{{/*    <p>ComicCollector Login</p>*/}}
+{{/*    {{template "botdoc"}}*/}}
+{{/*{{end}}*/}}
 
-    <div class="login-container">
-        <div id="app">
-            <form @submit.prevent="login">
-                <div>
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" v-model="username" required>
-                </div>
-                <div>
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" v-model="password" required>
-                </div>
-                <div v-if="error" id="error-message" style="color: red;">
-                    ${ error }
-                </div>
-                <button type="submit">Login</button>
-            </form>
-        </div>
+{{template "content"}}
 
-        <script>
-            new Vue({
-                el: '#app',
-                delimiters: ['${', '}'],
-                data: {
-                    username: '',
-                    password: '',
-                    error: ''
-                },
-                methods: {
-                    async login() {
-                        this.error = '';
-                        try {
-                            const response = await fetch('/api/v1/login', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded'
-                                },
-                                body: new URLSearchParams({
-                                    username: this.username,
-                                    password: this.password
-                                })
-                            });
-
-                            if (response.status === 302 || response.status === 303) {
-                                window.location.href = response.headers.get('Location');
-                            }
-                                else if (response.ok) {
-                                    window.location.href = response.url;
-                            } else {
-                                const result = await response.json();
-                                this.error = result.msg;
-                            }
-                        } catch (error) {
-                            this.error = 'An unexpected error occurred.';
-                        }
-                    }
-                }
-            });
-        </script>
+<div class="login-container">
+    <div id="app">
+        <form @submit.prevent="login">
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" id="username" v-model="username" required>
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" v-model="password" required>
+            </div>
+            <div v-if="error" id="error-message" style="color: red;">
+                ${ error }
+            </div>
+            <button type="submit">Login</button>
+        </form>
     </div>
 
-</body>
-</html>
+    <script>
+        var app = Vue.createApp({
+            delimiters: ['${', '}'],
+            data: () => ({
+                username: "",
+                password: "",
+                error: "",
+            }),
+            methods: {
+                async login() {
+                    this.error = '';
+                    try {
+                        const response = await fetch('/api/v1/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: new URLSearchParams({
+                                username: this.username,
+                                password: this.password
+                            })
+                        });
+
+                        if (response.status === 302 || response.status === 303) {
+                            window.location.href = response.headers.get('Location');
+                        }
+                        else if (response.ok) {
+                            window.location.href = response.url;
+                        } else {
+                            const result = await response.json();
+                            this.error = result.msg;
+                        }
+                    } catch (error) {
+                        this.error = 'An unexpected error occurred.';
+                    }
+                }
+            }
+        }).mount("#app")
+    </script>
+</div>
