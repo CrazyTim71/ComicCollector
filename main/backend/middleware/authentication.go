@@ -18,7 +18,7 @@ func CheckJwtToken() gin.HandlerFunc {
 		// check if the token exists
 		tokenString, err := c.Cookie("auth_token")
 		if err != nil {
-			log.Println("The auth_token is missing in the cookie")
+			//log.Println("The auth_token is missing in the cookie")
 			c.Redirect(http.StatusSeeOther, "/login")
 			c.Abort()
 			return
