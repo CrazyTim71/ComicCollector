@@ -16,14 +16,12 @@ import (
 
 func LoginHandler(rg *gin.RouterGroup) {
 	rg.POST("", func(c *gin.Context) {
-
-		// TODO: make middleware to check the jwt token on every endpoint
 		var requestBody struct {
-			Username string `json:"username" binding:"required"`
-			Password string `json:"password" binding:"required"`
+			Username string `form:"username" binding:"required"`
+			Password string `form:"password" binding:"required"`
 		}
 
-		if err := c.ShouldBindJSON(&requestBody); err != nil {
+		if err := c.ShouldBind(&requestBody); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request body", "error": true})
 			log.Println(err)
 			return
@@ -61,12 +59,21 @@ func LoginHandler(rg *gin.RouterGroup) {
 				}
 
 				// save the jwt token as cookie (valid for 24 hours)
-				duration := int((time.Hour * 24).Seconds())
-				c.SetCookie("auth_token", jwtToken, duration, "/", "", false, false)
-
-				//c.JSON(http.StatusOK, gin.H{"msg": "Successfully logged in"})
+				duration := 24 * time.Hour
+				cookie := http.Cookie{
+					Name:     "auth_token",
+					Value:    jwtToken,
+					Path:     "/",
+					Domain:   "", // Set your domain if needed
+					Expires:  time.Now().Add(duration),
+					SameSite: http.SameSiteLaxMode,
+					Secure:   true, // Ensure you use HTTPS
+					HttpOnly: true,
+				}
+				http.SetCookie(c.Writer, &cookie)
 
 				c.Redirect(http.StatusSeeOther, "/dashboard")
+				return
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Invalid credentials", "error": true})
 				log.Println(err)
