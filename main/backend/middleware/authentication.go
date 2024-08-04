@@ -107,7 +107,6 @@ func VerifyAdmin() gin.HandlerFunc {
 			return
 		}
 
-		// check if the user is an admin
 		user, err := operations.GetUserById(database.MongoDB, id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
@@ -115,7 +114,7 @@ func VerifyAdmin() gin.HandlerFunc {
 			return
 		}
 
-		// check if the user has the admin role
+		// get all roles by the user id
 		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
@@ -123,13 +122,14 @@ func VerifyAdmin() gin.HandlerFunc {
 			return
 		}
 
+		// check if the user has the admin role
 		isAdmin := false
 		for _, userRole := range userRoles {
+			// get single role
 			role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
 			if err != nil {
 				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 				c.Abort()
-				return
 				return
 			}
 

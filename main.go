@@ -63,3 +63,5 @@ func main() {
 		return
 	}
 }
+
+// TODO: settings to save things like the libraryName, isSignUpEnabled, ...

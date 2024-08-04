@@ -11,7 +11,7 @@ import (
 )
 
 func PerformFirstRunTasks() error {
-	// TODO: create basic permissions, like admin and user
+	// TODO: create more basic permissions
 
 	AdminUser, err := createAdminUser()
 	if err != nil {
