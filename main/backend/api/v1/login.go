@@ -2,12 +2,10 @@ package v1
 
 import (
 	"ComicCollector/main/backend/database"
-	"ComicCollector/main/backend/database/models"
+	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/Joi"
 	"ComicCollector/main/backend/utils/crypt"
-	"context"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
 	"strings"
@@ -27,22 +25,25 @@ func LoginHandler(rg *gin.RouterGroup) {
 			return
 		}
 
-		// check if username is allowed
+		// check username input
 		if err := Joi.UsernameSchema.Validate(requestBody.Username); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid username. Please remove all invalid characters and try again.", "error": true})
 			log.Println(err)
 			return
 		}
 
+		// check password input
+		if err := Joi.PasswordSchema.Validate(requestBody.Password); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid password. Please remove all invalid characters and try again.", "error": true})
+			log.Println(err)
+			return
+		}
+
 		username := strings.ToLower(requestBody.Username)
 		password := requestBody.Password
-		var existingUser models.User
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
 
 		// check if the user exists
-		err := database.MongoDB.Collection("user").FindOne(ctx, bson.M{"username": username}).Decode(&existingUser)
+		existingUser, err := operations.GetUserByUsername(database.MongoDB, username)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Invalid credentials", "error": true})
 			log.Println(err)

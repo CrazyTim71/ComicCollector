@@ -3,6 +3,7 @@ package main
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/router"
+	"ComicCollector/main/backend/setup"
 	"ComicCollector/main/backend/utils/crypt"
 	"ComicCollector/main/backend/utils/env"
 	"embed"
@@ -34,6 +35,18 @@ func main() {
 
 	// load the RSA key
 	crypt.InitRSAKey()
+
+	// check if the database already exists or if this is the first run
+	if !database.HasCollection(database.MongoDB, "user") {
+		log.Println("Detected the first startup")
+		log.Println("Initializing the database and creating the basic users, roles and permissions")
+
+		err := setup.PerformFirstRunTasks()
+		if err != nil {
+			log.Println("An error occurred while performing the database initialization: ")
+			log.Fatalln(err)
+		}
+	}
 
 	// create the router
 	r := gin.Default()

@@ -2,15 +2,12 @@ package middleware
 
 import (
 	"ComicCollector/main/backend/database"
-	"ComicCollector/main/backend/database/models"
+	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/crypt"
-	"context"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"net/http"
-	"time"
 )
 
 func CheckJwtToken() gin.HandlerFunc {
@@ -53,11 +50,7 @@ func CheckJwtToken() gin.HandlerFunc {
 		}
 
 		// check if user exists
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		var currentUser models.User
-		err = database.MongoDB.Collection("user").FindOne(ctx, bson.M{"_id": userId}).Decode(&currentUser)
+		_, err = operations.GetUserById(database.MongoDB, userId)
 		if err != nil {
 			log.Println(err)
 			c.SetCookie("auth_token", "", -1, "/", "", false, true)
@@ -86,5 +79,72 @@ func CheckJwtToken() gin.HandlerFunc {
 		c.Set("userId", jwtToken["userId"])
 		c.Set("loggedIn", true)
 		c.Next()
+	}
+}
+
+func VerifyAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// check if the user is logged in
+		loggedIn, exists := c.Get("loggedIn")
+		if !exists || !loggedIn.(bool) {
+			c.Redirect(http.StatusSeeOther, "/login")
+			c.Abort()
+			return
+		}
+
+		// check if the user is an admin
+		userId, exists := c.Get("userId")
+		if !exists {
+			c.Redirect(http.StatusSeeOther, "/login")
+			c.Abort()
+			return
+		}
+
+		id, err := primitive.ObjectIDFromHex(userId.(string))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+			c.Abort()
+			return
+		}
+
+		// check if the user is an admin
+		user, err := operations.GetUserById(database.MongoDB, id)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+			c.Abort()
+			return
+		}
+
+		// check if the user has the admin role
+		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+			c.Abort()
+			return
+		}
+
+		isAdmin := false
+		for _, userRole := range userRoles {
+			role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+				c.Abort()
+				return
+				return
+			}
+
+			if role.Name == "Administrator" {
+				isAdmin = true
+				break
+			}
+		}
+		if isAdmin {
+			c.Next()
+		} else {
+			c.JSON(http.StatusForbidden, gin.H{"message": "Not enough permissions to view this site", "error": true})
+			c.Abort()
+			return
+		}
+
 	}
 }
