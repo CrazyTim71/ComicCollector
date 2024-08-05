@@ -107,6 +107,7 @@ func VerifyAdmin() gin.HandlerFunc {
 			return
 		}
 
+		// check if user exists
 		user, err := operations.GetUserById(database.MongoDB, id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})

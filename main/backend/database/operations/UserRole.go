@@ -15,24 +15,18 @@ func SaveUserRole(db *mongo.Database, newUserRole models.UserRole) error {
 	defer cancel()
 
 	_, err := db.Collection("user_role").InsertOne(ctx, newUserRole, options.InsertOne())
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
-func GetUserRoleById(db *mongo.Database, userRoleId string) (models.UserRole, error) {
+func GetUserRoleById(db *mongo.Database, userRoleId primitive.ObjectID) (models.UserRole, error) {
 	var userRole models.UserRole
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	err := db.Collection("user_role").FindOne(ctx, bson.M{"_id": userRoleId}).Decode(&userRole)
-	if err != nil {
-		return userRole, err
-	}
 
-	return userRole, nil
+	return userRole, err
 }
 
 func GetUserRolesByUserId(db *mongo.Database, userId primitive.ObjectID) ([]models.UserRole, error) {
@@ -46,9 +40,6 @@ func GetUserRolesByUserId(db *mongo.Database, userId primitive.ObjectID) ([]mode
 	}
 
 	err = cursor.All(ctx, &userRoles)
-	if err != nil {
-		return userRoles, err
-	}
 
-	return userRoles, nil
+	return userRoles, err
 }

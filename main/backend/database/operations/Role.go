@@ -15,11 +15,8 @@ func SaveRole(db *mongo.Database, newRole models.Role) error {
 	defer cancel()
 
 	_, err := db.Collection("role").InsertOne(ctx, newRole, options.InsertOne())
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func GetRoleById(db *mongo.Database, roleId primitive.ObjectID) (models.Role, error) {
@@ -28,9 +25,6 @@ func GetRoleById(db *mongo.Database, roleId primitive.ObjectID) (models.Role, er
 	defer cancel()
 
 	err := db.Collection("role").FindOne(ctx, bson.M{"_id": roleId}).Decode(&role)
-	if err != nil {
-		return role, err
-	}
 
-	return role, nil
+	return role, err
 }

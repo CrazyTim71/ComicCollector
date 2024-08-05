@@ -15,11 +15,8 @@ func SaveUser(db *mongo.Database, newUser models.User) error {
 	defer cancel()
 
 	_, err := db.Collection("user").InsertOne(ctx, newUser, options.InsertOne())
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func GetUserByUsername(db *mongo.Database, username string) (models.User, error) {
