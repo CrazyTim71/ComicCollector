@@ -3,6 +3,7 @@ package middleware
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/operations"
+	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/utils/crypt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -134,7 +135,7 @@ func VerifyAdmin() gin.HandlerFunc {
 				return
 			}
 
-			if role.Name == "Administrator" {
+			if role.Name == groups.Administrator.Name {
 				isAdmin = true
 				break
 			}
@@ -146,6 +147,5 @@ func VerifyAdmin() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
 	}
 }
