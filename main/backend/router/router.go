@@ -72,6 +72,11 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 	})
 
+	r.GET("/logout", func(c *gin.Context) {
+		c.SetCookie("auth_token", "", -1, "/", "", false, false)
+		c.Redirect(http.StatusTemporaryRedirect, "/")
+	})
+
 	return true
 }
 
