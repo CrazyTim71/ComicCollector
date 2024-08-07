@@ -6,6 +6,7 @@ import (
 	"ComicCollector/main/backend/utils/env"
 	"github.com/gin-gonic/gin"
 	"html/template"
+	"log"
 	"net/http"
 )
 
@@ -24,13 +25,17 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 			return
 		}
 
-		template := template.Must(
+		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,
 				"main/frontend/public/index.gohtml",
 				"main/frontend/templates/base.gohtml"))
 
-		template.Execute(c.Writer, nil)
+		err = templateSite.Execute(c.Writer, nil)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+		}
 	})
 
 	r.GET("/login", func(c *gin.Context) {
@@ -40,23 +45,31 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 			return
 		}
 
-		template := template.Must(
+		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,
 				"main/frontend/public/login/index.gohtml",
 				"main/frontend/templates/base.gohtml"))
 
-		template.Execute(c.Writer, nil)
+		err = templateSite.Execute(c.Writer, nil)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+		}
 	})
 
 	r.GET("/dashboard", middleware.CheckJwtToken(), func(c *gin.Context) {
-		template := template.Must(
+		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,
 				"main/frontend/public/dashboard/index.gohtml",
 				"main/frontend/templates/base.gohtml"))
 
-		template.Execute(c.Writer, nil)
+		err := templateSite.Execute(c.Writer, nil)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+		}
 	})
 
 	return true
