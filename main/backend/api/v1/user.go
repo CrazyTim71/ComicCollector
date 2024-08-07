@@ -33,6 +33,7 @@ func UserHandler(rg *gin.RouterGroup) {
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				return
 			}
 			c.JSON(http.StatusOK, users)
 		})
@@ -76,6 +77,7 @@ func UserHandler(rg *gin.RouterGroup) {
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				return
 			}
 
 			c.JSON(http.StatusOK, user)
@@ -253,6 +255,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+					return
 				}
 
 				c.JSON(http.StatusOK, gin.H{"msg": "Deleted user successfully"})

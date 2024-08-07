@@ -5,8 +5,11 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -41,6 +44,9 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 		// check if user exists
 		user, err := operations.GetUserById(database.MongoDB, id)
 		if err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				log.Println(err)
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
@@ -49,6 +55,9 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 		// get all roles by the user id
 		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
 		if err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				log.Println(err)
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
@@ -61,6 +70,9 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 			for _, userRole := range userRoles {
 				role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
 				if err != nil {
+					if !errors.Is(err, mongo.ErrNoDocuments) {
+						log.Println(err)
+					}
 					c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 					c.Abort()
 					return
@@ -68,6 +80,9 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 
 				rolePermissions, err := operations.GetAllRolePermissionsByRoleId(database.MongoDB, role.ID)
 				if err != nil {
+					if !errors.Is(err, mongo.ErrNoDocuments) {
+						log.Println(err)
+					}
 					c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 					c.Abort()
 					return
@@ -119,6 +134,9 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 		// check if user exists
 		user, err := operations.GetUserById(database.MongoDB, id)
 		if err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				log.Println(err)
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
@@ -127,6 +145,9 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 		// get all roles by the user id
 		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
 		if err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				log.Println(err)
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
@@ -139,6 +160,9 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 			for _, userRole := range userRoles {
 				role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
 				if err != nil {
+					if !errors.Is(err, mongo.ErrNoDocuments) {
+						log.Println(err)
+					}
 					c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 					c.Abort()
 					return
@@ -146,6 +170,9 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 
 				rolePermissions, err := operations.GetAllRolePermissionsByRoleId(database.MongoDB, role.ID)
 				if err != nil {
+					if !errors.Is(err, mongo.ErrNoDocuments) {
+						log.Println(err)
+					}
 					c.JSON(http.StatusForbidden, gin.H{"msg": "Not enough permissions to access this resource", "error": true})
 					c.Abort()
 					return

@@ -5,8 +5,10 @@ import (
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/utils/crypt"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 )
@@ -53,7 +55,9 @@ func CheckJwtToken() gin.HandlerFunc {
 		// check if user exists
 		_, err = operations.GetUserById(database.MongoDB, userId)
 		if err != nil {
-			log.Println(err)
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				log.Println(err)
+			}
 			c.SetCookie("auth_token", "", -1, "/", "", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
@@ -111,6 +115,9 @@ func VerifyAdmin() gin.HandlerFunc {
 		// check if user exists
 		user, err := operations.GetUserById(database.MongoDB, id)
 		if err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				log.Println(err)
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
@@ -119,6 +126,9 @@ func VerifyAdmin() gin.HandlerFunc {
 		// get all roles by the user id
 		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
 		if err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				log.Println(err)
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
@@ -130,6 +140,9 @@ func VerifyAdmin() gin.HandlerFunc {
 			// get single role
 			role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
 			if err != nil {
+				if !errors.Is(err, mongo.ErrNoDocuments) {
+					log.Println(err)
+				}
 				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 				c.Abort()
 				return
