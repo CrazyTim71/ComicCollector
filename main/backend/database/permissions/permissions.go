@@ -14,6 +14,7 @@ var (
 		Name:        "user:viewAll",
 		Description: "Allows viewing all user information (admin only)",
 	}
+
 	UserModifySelf = Permission{
 		Name:        "user:modifySelf",
 		Description: "Allows a user to modify their own user information",
@@ -22,10 +23,16 @@ var (
 		Name:        "user:modifyAll",
 		Description: "Allows modifying all user information (admin only)",
 	}
-	UserDelete = Permission{
-		Name:        "user:delete",
-		Description: "Allows deleting a user",
+
+	UserDeleteSelf = Permission{
+		Name:        "user:deleteSelf",
+		Description: "Allows a user to delete their own account",
 	}
+	UserDeleteAll = Permission{
+		Name:        "user:deleteAll",
+		Description: "Allows deleting all user accounts (admin only)",
+	}
+
 	UserCreate = Permission{
 		Name:        "user:create",
 		Description: "Allows creating a new user",

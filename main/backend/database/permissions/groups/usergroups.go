@@ -16,7 +16,7 @@ var (
 			// user stuff
 			permissions.UserViewAll,
 			permissions.UserModifyAll,
-			permissions.UserDelete,
+			permissions.UserDeleteAll,
 			permissions.UserCreate,
 
 			// book stuff
@@ -33,6 +33,7 @@ var (
 			// user stuff
 			permissions.UserViewSelf,
 			permissions.UserModifySelf,
+			permissions.UserDeleteSelf,
 		},
 	}
 )
