@@ -29,6 +29,16 @@ func GetRolePermissionById(db *mongo.Database, rolePermissionId primitive.Object
 	return rolePermission, err
 }
 
+func GetRolePermissionByName(db *mongo.Database, rolePermissionName string) (models.RolePermission, error) {
+	var rolePermission models.RolePermission
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := db.Collection("role_permission").FindOne(ctx, bson.M{"name": rolePermissionName}).Decode(&rolePermission)
+
+	return rolePermission, err
+}
+
 func GetAllRolePermissionsByRoleId(db *mongo.Database, roleId primitive.ObjectID) ([]models.RolePermission, error) {
 	var rolePermissions []models.RolePermission
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

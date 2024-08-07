@@ -29,6 +29,16 @@ func GetUserRoleById(db *mongo.Database, userRoleId primitive.ObjectID) (models.
 	return userRole, err
 }
 
+func GetUserRoleByName(db *mongo.Database, userRoleName string) (models.UserRole, error) {
+	var userRole models.UserRole
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := db.Collection("user_role").FindOne(ctx, bson.M{"name": userRoleName}).Decode(&userRole)
+
+	return userRole, err
+}
+
 func GetUserRolesByUserId(db *mongo.Database, userId primitive.ObjectID) ([]models.UserRole, error) {
 	var userRoles []models.UserRole
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

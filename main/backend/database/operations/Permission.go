@@ -28,3 +28,13 @@ func GetPermissionById(db *mongo.Database, permissionId primitive.ObjectID) (mod
 
 	return permission, err
 }
+
+func GetPermissionByName(db *mongo.Database, permissionName string) (models.Permission, error) {
+	var permission models.Permission
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := db.Collection("permission").FindOne(ctx, bson.M{"name": permissionName}).Decode(&permission)
+
+	return permission, err
+}
