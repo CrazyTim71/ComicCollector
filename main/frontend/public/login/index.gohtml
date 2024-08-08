@@ -11,13 +11,21 @@
                 <h2 class="text-white">{{template "title"}}</h2>
             </div>
 
+{{/*            */}}{{/*                <div class="text-center mb-4">*/}}
+{{/*            */}}{{/*                    <h1 class="mb-3">Login</h1>*/}}
+{{/*            */}}{{/*                </div>*/}}
+{{/*            <div class="text-center mb-5">*/}}
+{{/*                <img src="/favicon.ico" alt="Logo" class="mb-2" style="width: 100px; height: auto;">*/}}
+{{/*                <h2 class="text-black">Login</h2>*/}}
+{{/*            </div>*/}}
+
             <!-- Login Form -->
-            <div id="app" class="p-5 rounded shadow bg-white" style="width: 350px;">
+            <div id="app" class="p-5 rounded shadow bg-white" style="width: 450px;">
                 <div class="text-center mb-4">
                     <h1 class="mb-3">Login</h1>
                 </div>
                 <div class="form-floating mb-3">
-                    <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="MindCollaps">
+                    <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="Username">
                     <label for="floatingInput">Username</label>
                 </div>
                 <div class="form-floating mb-3">
@@ -27,9 +35,9 @@
                 <div class="d-flex justify-content-center">
                     <button @click="login()" class="btn btn-primary w-100 btn-custom">Submit</button>
                 </div>
-                <div class="text-center mt-3">
-                    <a href="#" class="text-muted">Forgot Password?</a>
-                </div>
+{{/*                <div class="text-center mt-3">*/}}
+{{/*                    <a href="#" class="text-muted">Forgot Password?</a>*/}}
+{{/*                </div>*/}}
                 <div v-if="error" id="error-message" style="color: red;" class="text-center mt-3 mb-3">
                     ${ error }
                 </div>
@@ -37,7 +45,7 @@
 
             <!-- Footer Links -->
             <div class="text-center mt-3">
-                <a href="#" class="text-white">Create an Account</a>
+                <a href="/register" class="text-white">Create an Account</a>
             </div>
         </div>
 
@@ -57,17 +65,6 @@
             .btn-custom:hover {
                 background-color: #0056b3;
                 box-shadow: 0 0 10px rgba(0, 91, 187, 0.5);
-            }
-
-            /* Optional: Font Styling */
-            body {
-                font-family: 'Open Sans', sans-serif;
-                background-color: #1a1a1a;
-                color: #333;
-            }
-
-            h1, h2 {
-                font-family: 'Montserrat', sans-serif;
             }
         </style>
 
