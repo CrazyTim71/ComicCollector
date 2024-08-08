@@ -1,74 +1,70 @@
+<!DOCTYPE html>
 {{define "title"}}ComicCollector{{end}}
 
 <html lang="en" data-bs-theme="dark">
-{{template "head"}}
+    {{template "head"}}
 
-{{/*{{define "content"}}*/}}
-{{/*    {{template "topdoc"}}*/}}
-{{/*    <p>ComicCollector Login</p>*/}}
-{{/*    {{template "botdoc"}}*/}}
-{{/*{{end}}*/}}
-
-{{template "content"}}
-
-<div class="login-container">
-    <div id="app" class="d-flex justify-content-center align-items-center w-100 vh-100">
-        <form @submit.prevent="login" class="border border-white">
-            <div class="m-3">
-                <div class="mb-3">
-                    <label for="username" class="mr-1">Username:</label>
-                    <input type="text" id="username" v-model="username" required>
+    <div class="vh-100 d-flex justify-content-center align-items-center">
+        <div class="border border-white w-50 h-50">
+            <div id="login" class="d-flex justify-content-center align-items-center flex-column w-100 h-100">
+                <h1 class="text-white">Login</h1>
+                <div class="form-floating mb-2 w-50">
+                    <input v-model="username" type="text" class="form-control" id="floatingInput"
+                           placeholder="MindCollaps">
+                    <label for="floatingInput">Username</label>
                 </div>
-                <div class="mb-3">
-                    <label for="password" class="mr-1">Password:</label>
-                    <input type="password" id="password" v-model="password" required>
+                <div class="mb-3 form-floating w-50">
+                    <input v-model="password" type="password" class="form-control" id="floatingPassword"
+                           placeholder="Password" @keyup.enter="login()">
+                    <label for="floatingPassword">Password</label>
                 </div>
-                <div v-if="error" id="error-message" style="color: red;" class="mb-3">
-                    ${ error }
+                <div class="mb-3 d-flex justify-content-center">
+                    <button @click="login()" class="btn btn-primary align-center">Submit</button>
                 </div>
-                <button type="submit" class="btn btn-primary">Login</button>
             </div>
-
-        </form>
+        </div>
     </div>
 
-    <script>
-        var app = Vue.createApp({
-            delimiters: ['${', '}'],
-            data: () => ({
-                username: "",
-                password: "",
-                error: "",
-            }),
-            methods: {
-                async login() {
-                    this.error = '';
-                    try {
-                        const response = await fetch('/api/v1/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: new URLSearchParams({
-                                username: this.username,
-                                password: this.password
-                            })
-                        });
+    </div>
 
-                        if (response.status === 302 || response.status === 303) {
-                            window.location.href = response.headers.get('Location');
+        <script>
+            var login = Vue.createApp({
+                delimiters: ['${', '}'],
+                data: () => ({
+                    username: "",
+                    password: "",
+                    error: "",
+                }),
+                methods: {
+                    async login() {
+                        this.error = '';
+                        try {
+                            const response = await fetch('/api/v1/login', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                body: new URLSearchParams({
+                                    username: this.username,
+                                    password: this.password
+                                })
+                            });
+
+                            if (response.status === 302 || response.status === 303) {
+                                window.location.href = response.headers.get('Location');
+                            }
+                            else if (response.ok) {
+                                window.location.href = response.url;
+                            } else {
+                                const result = await response.json();
+                                this.error = result.msg;
+                            }
+                        } catch (error) {
+                            this.error = 'An unexpected error occurred.';
                         }
-                        else if (response.ok) {
-                            window.location.href = response.url;
-                        } else {
-                            const result = await response.json();
-                            this.error = result.msg;
-                        }
-                    } catch (error) {
-                        this.error = 'An unexpected error occurred.';
                     }
                 }
-            }
-        }).mount("#app")
-    </script>
-</div>
+            }).mount("#app")
+        </script>
+    </body>
+</html>
