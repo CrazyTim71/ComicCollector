@@ -251,6 +251,15 @@ func UserHandler(rg *gin.RouterGroup) {
 					return
 				}
 
+				// delete all role links to the user
+				_, err = operations.DeleteUserRoleByUserId(database.MongoDB, objID)
+				if err != nil {
+					log.Println(err)
+					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+					return
+				}
+
+				// delete the user
 				err = operations.DeleteUserById(database.MongoDB, objID)
 				if err != nil {
 					log.Println(err)

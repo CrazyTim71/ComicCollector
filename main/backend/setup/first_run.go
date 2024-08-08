@@ -29,25 +29,25 @@ func PerformFirstRunTasks() error {
 
 	// create the permissions
 	for _, permission := range normalPermissions {
-		_, err := createPermission(permission.Name, permission.Description)
+		_, err := operations.CreatePermission(permission.Name, permission.Description)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, permission := range adminPermissions {
-		_, err := createPermission(permission.Name, permission.Description)
+		_, err := operations.CreatePermission(permission.Name, permission.Description)
 		if err != nil {
 			return err
 		}
 	}
 
 	// create the roles
-	normalRole, err := createRole(groups.User.Name, groups.User.Description)
+	normalRole, err := operations.CreateRole(groups.User.Name, groups.User.Description)
 	if err != nil {
 		return err
 	}
-	adminRole, err := createRole(groups.Administrator.Name, groups.Administrator.Description)
+	adminRole, err := operations.CreateRole(groups.Administrator.Name, groups.Administrator.Description)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func PerformFirstRunTasks() error {
 			return err
 		}
 
-		_, err = createRolePermission(normalRole, perm)
+		_, err = operations.CreateRolePermission(normalRole, perm)
 		if err != nil {
 			return err
 		}
@@ -71,25 +71,25 @@ func PerformFirstRunTasks() error {
 			return err
 		}
 
-		_, err = createRolePermission(adminRole, perm)
+		_, err = operations.CreateRolePermission(adminRole, perm)
 		if err != nil {
 			return err
 		}
 	}
 
 	// assign the user roles
-	_, err = createUserRole(NormalUser, normalRole)
+	_, err = operations.CreateUserRole(NormalUser, normalRole)
 	if err != nil {
 		return err
 	}
 
 	// admins have both roles
-	_, err = createUserRole(AdminUser, normalRole)
+	_, err = operations.CreateUserRole(AdminUser, normalRole)
 	if err != nil {
 		return err
 	}
 
-	_, err = createUserRole(AdminUser, adminRole)
+	_, err = operations.CreateUserRole(AdminUser, adminRole)
 	if err != nil {
 		return err
 	}
@@ -202,94 +202,6 @@ func createNormalUser() (models.User, error) {
 	log.Println("Please change the password after your first login !!") // TODO: enforce this
 
 	return normalUser, nil
-}
-
-func createRole(name string, description string) (models.Role, error) {
-	var role models.Role
-
-	role.ID = primitive.NewObjectID()
-	role.Name = name
-	role.Description = description
-	role.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	role.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	err := operations.SaveRole(database.MongoDB, role)
-	if err != nil {
-		return role, err
-	}
-
-	return role, nil
-}
-
-func createPermission(name string, description string) (models.Permission, error) {
-	var permission models.Permission
-
-	permission.ID = primitive.NewObjectID()
-	permission.Name = name
-	permission.Description = description
-	permission.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	permission.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	// check if permission already exists
-	_, err := operations.GetPermissionByName(database.MongoDB, permission.Name)
-	if err == nil {
-		return permission, nil
-	}
-
-	err = operations.SavePermission(database.MongoDB, permission)
-	if err != nil {
-		return permission, err
-	}
-
-	return permission, nil
-}
-
-func createRolePermission(role models.Role, permission models.Permission) (models.RolePermission, error) {
-	var rolePermission models.RolePermission
-
-	rolePermission.ID = primitive.NewObjectID()
-	rolePermission.RoleId = role.ID
-	rolePermission.PermissionId = permission.ID
-	rolePermission.Name = role.Name + "_" + permission.Name
-	rolePermission.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	rolePermission.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	// check if rolePermission already exists
-	_, err := operations.GetRolePermissionByName(database.MongoDB, rolePermission.Name)
-	if err == nil {
-		return rolePermission, nil
-	}
-
-	err = operations.SaveRolePermission(database.MongoDB, rolePermission)
-	if err != nil {
-		return rolePermission, err
-	}
-
-	return rolePermission, nil
-}
-
-func createUserRole(user models.User, role models.Role) (models.UserRole, error) {
-	var userRole models.UserRole
-
-	userRole.ID = primitive.NewObjectID()
-	userRole.UserId = user.ID
-	userRole.RoleId = role.ID
-	userRole.Name = user.Username + "_" + role.Name
-	userRole.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	userRole.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	// check if userRole already exists
-	_, err := operations.GetUserRoleByName(database.MongoDB, userRole.Name)
-	if err == nil {
-		return userRole, nil
-	}
-
-	err = operations.SaveUserRole(database.MongoDB, userRole)
-	if err != nil {
-		return userRole, err
-	}
-
-	return userRole, nil
 }
 
 //func createAdminRole() (models.Role, error) {

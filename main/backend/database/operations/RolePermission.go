@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
@@ -52,4 +53,28 @@ func GetAllRolePermissionsByRoleId(db *mongo.Database, roleId primitive.ObjectID
 	err = cursor.All(ctx, &rolePermissions)
 
 	return rolePermissions, err
+}
+
+func CreateRolePermission(role models.Role, permission models.Permission) (models.RolePermission, error) {
+	var rolePermission models.RolePermission
+
+	rolePermission.ID = primitive.NewObjectID()
+	rolePermission.RoleId = role.ID
+	rolePermission.PermissionId = permission.ID
+	rolePermission.Name = role.Name + "_" + permission.Name
+	rolePermission.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	rolePermission.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	// check if rolePermission already exists
+	_, err := GetRolePermissionByName(database.MongoDB, rolePermission.Name)
+	if err == nil {
+		return rolePermission, nil
+	}
+
+	err = SaveRolePermission(database.MongoDB, rolePermission)
+	if err != nil {
+		return rolePermission, err
+	}
+
+	return rolePermission, nil
 }

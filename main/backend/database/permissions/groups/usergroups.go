@@ -36,4 +36,13 @@ var (
 			permissions.UserDeleteSelf,
 		},
 	}
+
+	RestrictedUser = UserGroup{
+		Name:        "RestrictedUser",
+		Description: "Restricted access to all features until an administrator approves the user",
+		Permissions: []permissions.Permission{
+			// user stuff
+			permissions.UserViewSelf,
+		},
+	}
 )

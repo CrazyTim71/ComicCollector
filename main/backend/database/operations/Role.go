@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
@@ -27,4 +28,21 @@ func GetRoleById(db *mongo.Database, roleId primitive.ObjectID) (models.Role, er
 	err := db.Collection("role").FindOne(ctx, bson.M{"_id": roleId}).Decode(&role)
 
 	return role, err
+}
+
+func CreateRole(name string, description string) (models.Role, error) {
+	var role models.Role
+
+	role.ID = primitive.NewObjectID()
+	role.Name = name
+	role.Description = description
+	role.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	role.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	err := SaveRole(database.MongoDB, role)
+	if err != nil {
+		return role, err
+	}
+
+	return role, nil
 }

@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,4 +38,27 @@ func GetPermissionByName(db *mongo.Database, permissionName string) (models.Perm
 	err := db.Collection("permission").FindOne(ctx, bson.M{"name": permissionName}).Decode(&permission)
 
 	return permission, err
+}
+
+func CreatePermission(name string, description string) (models.Permission, error) {
+	var permission models.Permission
+
+	permission.ID = primitive.NewObjectID()
+	permission.Name = name
+	permission.Description = description
+	permission.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	permission.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	// check if permission already exists
+	_, err := GetPermissionByName(database.MongoDB, permission.Name)
+	if err == nil {
+		return permission, nil
+	}
+
+	err = SavePermission(database.MongoDB, permission)
+	if err != nil {
+		return permission, err
+	}
+
+	return permission, nil
 }

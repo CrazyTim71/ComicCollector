@@ -58,6 +58,26 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 	})
 
+	r.GET("/register", func(c *gin.Context) {
+		authCookie, err := c.Cookie("auth_token")
+		if authCookie != "" && err == nil {
+			c.Redirect(http.StatusTemporaryRedirect, "/dashboard")
+			return
+		}
+
+		templateSite := template.Must(
+			template.ParseFS(
+				env.Files,
+				"main/frontend/public/register/index.gohtml",
+				"main/frontend/templates/base.gohtml"))
+
+		err = templateSite.Execute(c.Writer, nil)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+		}
+	})
+
 	r.GET("/dashboard", middleware.CheckJwtToken(), func(c *gin.Context) {
 		templateSite := template.Must(
 			template.ParseFS(
@@ -78,6 +98,9 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 	})
 
 	return true
+
+	// TODO: add /privacy
+	// TODO: add /terms
 }
 
 func InitBackendRoutes(r *gin.Engine) bool {

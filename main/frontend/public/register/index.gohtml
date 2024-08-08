@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="en">
+{{template "head"}}
+
+<body>
+<div class="vh-100 d-flex flex-column justify-content-center align-items-center gradient">
+    <!-- Name and Logo -->
+    <div class="text-center mb-5">
+        <img src="/favicon.ico" alt="Logo" class="mb-2" style="width: 100px; height: auto;">
+        <h2 class="text-white">{{template "title"}}</h2>
+    </div>
+
+    <!-- SignUp Form -->
+    <div id="app" class="p-5 rounded shadow bg-white" style="width: 450px;">
+        <div class="text-center mb-4">
+            <h1 class="mb-3">Create Account</h1>
+        </div>
+        <div class="form-floating mb-3">
+            <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="Username">
+            <label for="floatingInput">Username</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input v-model="password" type="password" class="form-control" id="floatingPassword" placeholder="Password" @keyup.enter="register()">
+            <label for="floatingPassword">Password</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input v-model="passwordRepeated" type="password" class="form-control" id="floatingPassword" placeholder="Repeat Password" @keyup.enter="register()">
+            <label for="floatingPassword">Repeat Password</label>
+        </div>
+        <div class="d-flex justify-content-center">
+            <button @click="register()" class="btn btn-primary w-100 btn-custom">Submit</button>
+        </div>
+        <div v-if="error" id="error-message" style="color: red;" class="text-center mt-3 mb-3">
+            ${ error }
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Background Gradient
+     https://cssgradient.io/
+    */
+    .gradient {
+        background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(233,216,197,1) 0%, rgba(139,201,204,1) 46%, rgba(10,180,214,1)); !important;
+    }
+
+    /* Custom Button Styling */
+    .btn-custom {
+        background-color: #007bff;
+        border-color: #007bff;
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-custom:hover {
+        background-color: #0056b3;
+        box-shadow: 0 0 10px rgba(0, 91, 187, 0.5);
+    }
+</style>
+
+<script>
+    const app = Vue.createApp({
+        delimiters: ['${', '}'],
+        data: () => ({
+            username: "",
+            password: "",
+            passwordRepeated: "",
+            error: "",
+        }),
+        methods: {
+            register: async function () {
+                this.error = "";
+
+                if (this.username === "" || this.password === "" || this.passwordRepeated === "") {
+                    this.error = 'Please fill in all fields';
+                    return;
+                }
+
+                if (this.password !== this.passwordRepeated) {
+                    this.error = 'Passwords do not match';
+                    return;
+                }
+
+                try {
+                    let response = await fetch('/api/v1/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: this.username,
+                            password: this.password,
+                            passwordRepeated: this.passwordRepeated
+                        })
+                    });
+
+                    if (response.status === 302 || response.status === 303) {
+                        window.location.href = response.headers.get('Location');
+                    } else if (response.ok) {
+                        window.location.href = response.url;
+                    } else {
+                        const result = await response.json();
+                        this.error = result.msg;
+                    }
+                } catch (error) {
+                    this.error = 'An unexpected error occurred.';
+                }
+            },
+        }
+    }).mount("#app");
+</script>
+</body>
+</html>

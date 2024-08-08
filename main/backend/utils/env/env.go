@@ -15,6 +15,7 @@ var ENV_FILE_LOCATION = ".env"
 var MONGODB_DBNAME = "ComicCollector"
 var MONGODB_URI = ""
 var RSA_FILENAME = "rsa_private_key.pem"
+var SIGNUP_ENABLED = false
 
 var Files embed.FS
 
@@ -75,4 +76,13 @@ func GetRSAFilename() string {
 	}
 
 	return RSA_FILENAME
+}
+
+func GetSignupEnabled() bool {
+	signupEnabled := os.Getenv("SIGNUP_ENABLED")
+	if signupEnabled == "true" {
+		SIGNUP_ENABLED = true
+	}
+
+	return SIGNUP_ENABLED
 }

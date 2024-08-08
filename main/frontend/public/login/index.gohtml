@@ -50,7 +50,9 @@
         </div>
 
         <style>
-            /* Background Gradient */
+            /* Background Gradient
+             https://cssgradient.io/
+            */
             .gradient {
                 background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(233,216,197,1) 0%, rgba(139,201,204,1) 46%, rgba(10,180,214,1)); !important;
             }
@@ -104,6 +106,8 @@
                             } else {
                                 const result = await response.json();
                                 this.error = result.msg;
+
+                                this.password = "";
                             }
                         } catch (error) {
                             this.error = 'An unexpected error occurred.';

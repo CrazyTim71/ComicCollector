@@ -1,1 +1,46 @@
-<p>landing screen</p>
+<!DOCTYPE html>
+<html lang="en">
+{{template "head"}}
+
+<body>
+<div class="vh-100 d-flex flex-column justify-content-center align-items-center gradient">
+    <!-- Logo und Seitenname -->
+    <div class="text-center mb-5">
+        <img src="/favicon.ico" alt="Logo" class="mb-2" style="width: 100px; height: auto;">
+    </div>
+
+    <!-- Hero Section -->
+    <div class="text-center text-white">
+        <h1>Welcome to Comic Collector</h1>
+        <p>Your ultimate app for managing your comic book collection.</p>
+        <a href="/login" class="btn btn-primary btn-lg mt-4">Login</a>
+    </div>
+
+    <!-- Footer Links (Optional) -->
+    <div class="text-center mt-5">
+        <a href="/register" class="text-white me-3">Create an Account</a>
+        <a href="/privacy" class="text-white me-3">Privacy Policy</a>
+        <a href="/terms" class="text-white">Terms of Service</a>
+    </div>
+</div>
+
+<style>
+    /* Background Gradient */
+    .gradient {
+        background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(233,216,197,1) 0%, rgba(139,201,204,1) 46%, rgba(10,180,214,1)); !important;
+    }
+
+    /* Custom Button Styling */
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        box-shadow: 0 0 10px rgba(0, 91, 187, 0.5);
+    }
+</style>
+</body>
+</html>
