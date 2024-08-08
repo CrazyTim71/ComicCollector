@@ -12,7 +12,7 @@
             </div>
 
             <!-- Login Form -->
-            <div class="p-5 rounded shadow bg-white login" style="width: 350px;">
+            <div id="app" class="p-5 rounded shadow bg-white" style="width: 350px;">
                 <div class="text-center mb-4">
                     <h1 class="mb-3">Login</h1>
                 </div>
@@ -29,6 +29,9 @@
                 </div>
                 <div class="text-center mt-3">
                     <a href="#" class="text-muted">Forgot Password?</a>
+                </div>
+                <div v-if="error" id="error-message" style="color: red;" class="text-center mt-3 mb-3">
+                    ${ error }
                 </div>
             </div>
 
@@ -69,7 +72,7 @@
         </style>
 
         <script>
-            var login = Vue.createApp({
+            const app = Vue.createApp({
                 delimiters: ['${', '}'],
                 data: () => ({
                     username: "",
@@ -77,15 +80,21 @@
                     error: "",
                 }),
                 methods: {
-                    async login() {
-                        this.error = '';
+                    login: async function () {
+                        this.error = "";
+
+                        if (this.username === "" || this.password === "") {
+                            this.error = 'Please fill in all fields';
+                            return;
+                        }
+
                         try {
-                            const response = await fetch('/api/v1/login', {
+                            let response = await fetch('/api/v1/login', {
                                 method: 'POST',
                                 headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                    'Content-Type': 'application/json'
                                 },
-                                body: new URLSearchParams({
+                                body: JSON.stringify({
                                     username: this.username,
                                     password: this.password
                                 })
@@ -93,8 +102,7 @@
 
                             if (response.status === 302 || response.status === 303) {
                                 window.location.href = response.headers.get('Location');
-                            }
-                            else if (response.ok) {
+                            } else if (response.ok) {
                                 window.location.href = response.url;
                             } else {
                                 const result = await response.json();
@@ -103,9 +111,9 @@
                         } catch (error) {
                             this.error = 'An unexpected error occurred.';
                         }
-                    }
+                    },
                 }
-            }).mount("#login");
+            }).mount("#app");
         </script>
     </body>
 </html>

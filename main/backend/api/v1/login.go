@@ -15,8 +15,8 @@ import (
 func LoginHandler(rg *gin.RouterGroup) {
 	rg.POST("", func(c *gin.Context) {
 		var requestBody struct {
-			Username string `form:"username" binding:"required"`
-			Password string `form:"password" binding:"required"`
+			Username string `json:"username" binding:"required"`
+			Password string `json:"password" binding:"required"`
 		}
 
 		if err := c.ShouldBind(&requestBody); err != nil {
