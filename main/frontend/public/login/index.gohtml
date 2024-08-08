@@ -1,31 +1,72 @@
 <!DOCTYPE html>
-{{define "title"}}ComicCollector{{end}}
 
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
     {{template "head"}}
 
-    <div class="vh-100 d-flex justify-content-center align-items-center">
-        <div class="border border-white w-50 h-50">
-            <div id="login" class="d-flex justify-content-center align-items-center flex-column w-100 h-100">
-                <h1 class="text-white">Login</h1>
-                <div class="form-floating mb-2 w-50">
-                    <input v-model="username" type="text" class="form-control" id="floatingInput"
-                           placeholder="MindCollaps">
+    <body>
+        <div class="vh-100 d-flex flex-column justify-content-center align-items-center gradient">
+            <!-- Name and Logo -->
+            <div class="text-center mb-5">
+                <img src="/favicon.ico" alt="Logo" class="mb-2" style="width: 100px; height: auto;">
+                <h2 class="text-white">{{template "title"}}</h2>
+            </div>
+
+            <!-- Login Form -->
+            <div class="p-5 rounded shadow bg-white login" style="width: 350px;">
+                <div class="text-center mb-4">
+                    <h1 class="mb-3">Login</h1>
+                </div>
+                <div class="form-floating mb-3">
+                    <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="MindCollaps">
                     <label for="floatingInput">Username</label>
                 </div>
-                <div class="mb-3 form-floating w-50">
-                    <input v-model="password" type="password" class="form-control" id="floatingPassword"
-                           placeholder="Password" @keyup.enter="login()">
+                <div class="form-floating mb-3">
+                    <input v-model="password" type="password" class="form-control" id="floatingPassword" placeholder="Password" @keyup.enter="login()">
                     <label for="floatingPassword">Password</label>
                 </div>
-                <div class="mb-3 d-flex justify-content-center">
-                    <button @click="login()" class="btn btn-primary align-center">Submit</button>
+                <div class="d-flex justify-content-center">
+                    <button @click="login()" class="btn btn-primary w-100 btn-custom">Submit</button>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="#" class="text-muted">Forgot Password?</a>
                 </div>
             </div>
-        </div>
-    </div>
 
-    </div>
+            <!-- Footer Links -->
+            <div class="text-center mt-3">
+                <a href="#" class="text-white">Create an Account</a>
+            </div>
+        </div>
+
+        <style>
+            /* Background Gradient */
+            .gradient {
+                background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(233,216,197,1) 0%, rgba(139,201,204,1) 46%, rgba(10,180,214,1)); !important;
+            }
+
+            /* Custom Button Styling */
+            .btn-custom {
+                background-color: #007bff;
+                border-color: #007bff;
+                transition: background-color 0.3s, box-shadow 0.3s;
+            }
+
+            .btn-custom:hover {
+                background-color: #0056b3;
+                box-shadow: 0 0 10px rgba(0, 91, 187, 0.5);
+            }
+
+            /* Optional: Font Styling */
+            body {
+                font-family: 'Open Sans', sans-serif;
+                background-color: #1a1a1a;
+                color: #333;
+            }
+
+            h1, h2 {
+                font-family: 'Montserrat', sans-serif;
+            }
+        </style>
 
         <script>
             var login = Vue.createApp({
@@ -64,7 +105,7 @@
                         }
                     }
                 }
-            }).mount("#app")
+            }).mount("#login");
         </script>
     </body>
 </html>
