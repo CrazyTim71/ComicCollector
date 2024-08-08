@@ -13,6 +13,7 @@ import (
 
 func PerformFirstRunTasks() error {
 	// TODO: automatically create all usergroups with the permissions
+	// TODO: create the RestrictedUserGroup with the permissions
 
 	AdminUser, err := createAdminUser()
 	if err != nil {
