@@ -14,6 +14,10 @@ import (
 func PerformFirstRunTasks() error {
 	// TODO: automatically create all usergroups with the permissions
 	// TODO: create the RestrictedUserGroup with the permissions
+	// TODO: add first setup frontend page
+	//		--> ask for the admin username and password
+	//		--> setup the library name
+	//		--> ...
 
 	AdminUser, err := createAdminUser()
 	if err != nil {
