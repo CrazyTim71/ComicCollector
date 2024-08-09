@@ -1,1 +1,79 @@
-<p>dashboard wohooo :P</p>
+
+
+<!DOCTYPE html>
+<html lang="en">
+    {{template "head"}}
+
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#">Comic Collector</a>
+                <div class="collapse navbar-collapse">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/profile">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">Logout</a>
+                        </li>
+
+                        {{ if .isAdmin }}
+                            <li class="nav-item" id="admin-link">
+                                <a class="nav-link" href="#">Admin Section</a>
+                            </li>
+                        {{  end  }}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="vh-100 d-flex flex-column justify-content-center align-items-center gradient">
+            <div class="container mt-4">
+                <div class="row">
+                    <div class="col-md-3 icon-container">
+                        <a href="wishlist.html">
+                            <i class="fas fa-list"></i>
+                            <p>Wishlist</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3 icon-container">
+                        <a href="book-management.html">
+                            <i class="fas fa-book"></i>
+                            <p>Book Management</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3 icon-container">
+                        <a href="settings.html">
+                            <i class="fas fa-cogs"></i>
+                            <p>Settings</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3 icon-container">
+                        <a href="backup.html">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Backup</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <p>dashboard wohooo :P</p>
+
+        </div>
+
+        <style>
+            .icon-container {
+                text-align: center;
+                margin: 20px;
+            }
+            .icon-container i {
+                font-size: 3rem;
+                color: #007bff;
+            }
+            .icon-container p {
+                margin-top: 10px;
+            }
+        </style>
+
+    </body>
+</html>

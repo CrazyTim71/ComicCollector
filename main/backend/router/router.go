@@ -2,9 +2,11 @@ package router
 
 import (
 	v1 "ComicCollector/main/backend/api/v1"
+	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils/env"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"html/template"
 	"log"
 	"net/http"
@@ -40,6 +42,7 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+			return
 		}
 	})
 
@@ -65,6 +68,7 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+			return
 		}
 	})
 
@@ -90,20 +94,49 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+			return
 		}
 	})
 
 	r.GET("/dashboard", middleware.CheckJwtToken(), func(c *gin.Context) {
+		// get the userId
+		// because of middleware.CheckJwtToken() we can safely assume that the user id logged in
+		id, exists := c.Get("userId")
+		if !exists {
+			c.Redirect(http.StatusSeeOther, "/login")
+			return
+		}
+
+		userId, err := primitive.ObjectIDFromHex(id.(string))
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+			return
+		}
+
+		// check if the user is an admin
+		isAdmin, err := groups.CheckUserGroup(userId, groups.Administrator)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+			return
+		}
+
+		data := map[string]interface{}{
+			"isAdmin": isAdmin,
+		}
+
 		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,
 				"main/frontend/public/dashboard/index.gohtml",
 				"main/frontend/templates/base.gohtml"))
 
-		err := templateSite.Execute(c.Writer, nil)
+		err = templateSite.Execute(c.Writer, data)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+			return
 		}
 	})
 

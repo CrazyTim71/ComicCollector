@@ -97,7 +97,6 @@ func VerifyAdmin() gin.HandlerFunc {
 			return
 		}
 
-		// check if the user is an admin
 		userId, exists := c.Get("userId")
 		if !exists {
 			c.Redirect(http.StatusSeeOther, "/login")
@@ -112,47 +111,14 @@ func VerifyAdmin() gin.HandlerFunc {
 			return
 		}
 
-		// check if user exists
-		user, err := operations.GetUserById(database.MongoDB, id)
+		isAdmin, err := groups.CheckUserGroup(id, groups.Administrator)
 		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				log.Println(err)
-			}
+			log.Println(err)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
 		}
 
-		// get all roles by the user id
-		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
-		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				log.Println(err)
-			}
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
-		// check if the user has the admin role
-		isAdmin := false
-		for _, userRole := range userRoles {
-			// get single role
-			role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
-			if err != nil {
-				if !errors.Is(err, mongo.ErrNoDocuments) {
-					log.Println(err)
-				}
-				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-				c.Abort()
-				return
-			}
-
-			if role.Name == groups.Administrator.Name {
-				isAdmin = true
-				break
-			}
-		}
 		if isAdmin {
 			c.Next()
 		} else {
