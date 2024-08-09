@@ -43,10 +43,12 @@
                 </div>
             </div>
 
-            <!-- Footer Links -->
-            <div class="text-center mt-3">
-                <a href="/register" class="text-white">Create an Account</a>
-            </div>
+            {{ if .SIGNUP_ENABLED }}
+                <!-- Footer Links -->
+                <div class="text-center mt-3">
+                    <a href="/register" class="text-white">Create an Account</a>
+                </div>
+            {{ end }}
         </div>
 
         <style>

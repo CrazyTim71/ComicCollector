@@ -18,7 +18,9 @@
 
             <!-- Footer Links -->
             <div class="text-center mt-5">
-                <a href="/register" class="text-white me-3">Create an Account</a>
+                {{ if .SIGNUP_ENABLED }}
+                    <a href="/register" class="text-white me-3">Create an Account</a>
+                {{ end }}
                 <a href="/privacy" class="text-white me-3">Privacy Policy</a>
                 <a href="/terms" class="text-white">Terms of Service</a>
             </div>

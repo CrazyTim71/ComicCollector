@@ -25,13 +25,18 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 			return
 		}
 
+		SignupEnabled := env.GetSignupEnabled()
 		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,
 				"main/frontend/public/index.gohtml",
 				"main/frontend/templates/base.gohtml"))
 
-		err = templateSite.Execute(c.Writer, nil)
+		data := map[string]interface{}{
+			"SIGNUP_ENABLED": SignupEnabled,
+		}
+
+		err = templateSite.Execute(c.Writer, data)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
@@ -45,13 +50,18 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 			return
 		}
 
+		SignupEnabled := env.GetSignupEnabled()
+		data := map[string]interface{}{
+			"SIGNUP_ENABLED": SignupEnabled,
+		}
+
 		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,
 				"main/frontend/public/login/index.gohtml",
 				"main/frontend/templates/base.gohtml"))
 
-		err = templateSite.Execute(c.Writer, nil)
+		err = templateSite.Execute(c.Writer, data)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
@@ -62,6 +72,11 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		authCookie, err := c.Cookie("auth_token")
 		if authCookie != "" && err == nil {
 			c.Redirect(http.StatusTemporaryRedirect, "/dashboard")
+			return
+		}
+
+		if !env.GetSignupEnabled() {
+			c.Redirect(http.StatusTemporaryRedirect, "/login")
 			return
 		}
 
