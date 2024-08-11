@@ -7,7 +7,7 @@ type Book struct {
 	Title       string             `json:"title" bson:"title"`
 	Number      int                `json:"number" bson:"number"`
 	ReleaseDate string             `json:"release_date" bson:"release_date"`
-	CoverImage  string             `json:"cover_image" bson:"cover_image"`
+	CoverImage  []byte             `json:"cover_image" bson:"cover_image"`
 	Description string             `json:"description" bson:"description"`
 	Notes       string             `json:"notes" bson:"notes"`
 	BookType    primitive.ObjectID `json:"book_type" bson:"book_type"`

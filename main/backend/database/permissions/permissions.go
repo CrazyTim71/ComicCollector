@@ -52,4 +52,8 @@ var (
 		Name:        "book:delete",
 		Description: "Allows deleting a book",
 	}
+	BookViewAll = Permission{
+		Name:        "book:viewAll",
+		Description: "Allows viewing all books",
+	}
 )

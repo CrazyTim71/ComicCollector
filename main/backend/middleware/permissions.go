@@ -5,6 +5,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions"
+	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -194,4 +195,76 @@ func containsPermission(slice []models.RolePermission, item string) bool {
 		}
 	}
 	return false
+}
+
+func VerifyUserGroup(group groups.UserGroup) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// check if the user is logged in
+		loggedIn, exists := c.Get("loggedIn")
+		if !exists || !loggedIn.(bool) {
+			c.Redirect(http.StatusSeeOther, "/login")
+			c.Abort()
+			return
+		}
+
+		userId, err := webcontext.GetUserId(c)
+		if err != nil {
+			log.Println(err)
+			c.Redirect(http.StatusSeeOther, "/login")
+			c.Abort()
+			return
+		}
+
+		isGroup, err := groups.CheckUserGroup(userId, group)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+			c.Abort()
+			return
+		}
+
+		if isGroup {
+			c.Next()
+		} else {
+			c.JSON(http.StatusForbidden, gin.H{"message": "Not enough permissions to view this site", "error": true})
+			c.Abort()
+			return
+		}
+	}
+}
+
+func DenyUserGroup(group groups.UserGroup) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// check if the user is logged in
+		loggedIn, exists := c.Get("loggedIn")
+		if !exists || !loggedIn.(bool) {
+			c.Redirect(http.StatusSeeOther, "/login")
+			c.Abort()
+			return
+		}
+
+		userId, err := webcontext.GetUserId(c)
+		if err != nil {
+			log.Println(err)
+			c.Redirect(http.StatusSeeOther, "/login")
+			c.Abort()
+			return
+		}
+
+		isGroup, err := groups.CheckUserGroup(userId, group)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+			c.Abort()
+			return
+		}
+
+		if isGroup {
+			c.JSON(http.StatusForbidden, gin.H{"message": "Not enough permissions to view this site", "error": true})
+			c.Abort()
+			return
+		} else {
+			c.Next()
+		}
+	}
 }

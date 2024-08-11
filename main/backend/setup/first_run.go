@@ -169,7 +169,7 @@ func createAdminUser() (models.User, error) {
 	adminUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 	adminUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err = operations.SaveUser(database.MongoDB, adminUser)
+	err = operations.CreateUser(database.MongoDB, adminUser)
 	if err != nil {
 		return adminUser, err
 	}
@@ -197,7 +197,7 @@ func createNormalUser() (models.User, error) {
 	normalUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 	normalUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err = operations.SaveUser(database.MongoDB, normalUser)
+	err = operations.CreateUser(database.MongoDB, normalUser)
 	if err != nil {
 		return normalUser, err
 	}

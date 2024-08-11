@@ -31,6 +31,7 @@ var (
 			permissions.BookCreate,
 			permissions.BookModify,
 			permissions.BookDelete,
+			permissions.BookViewAll, // nothing special
 		},
 	}
 
@@ -42,6 +43,9 @@ var (
 			permissions.UserViewSelf,
 			permissions.UserModifySelf,
 			permissions.UserDeleteSelf,
+
+			// book stuff
+			permissions.BookViewAll, // nothing special
 		},
 	}
 
@@ -74,7 +78,7 @@ func CheckUserGroup(userID primitive.ObjectID, group UserGroup) (bool, error) {
 		return false, err
 	}
 
-	// check if the user has the admin role
+	// check if the user has the desired role
 	isUserInGroup := false
 	for _, userRole := range userRoles {
 		// get single role

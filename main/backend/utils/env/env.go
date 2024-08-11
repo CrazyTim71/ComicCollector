@@ -9,6 +9,7 @@ import (
 )
 
 const VERSION = "v0.1"
+const MaxImageFileSize = 4 << 20 // 4 MiB
 
 // default values as fallback
 var SERVER_HOST = "127.0.0.1"

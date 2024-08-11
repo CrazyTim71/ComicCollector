@@ -17,4 +17,7 @@ func ApiHandler(rg *gin.RouterGroup) {
 
 	register := rg.Group("/register")
 	RegisterHandler(register)
+
+	book := rg.Group("/book")
+	BookHandler(book)
 }

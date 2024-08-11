@@ -90,7 +90,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		newUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 		newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-		err = operations.SaveUser(database.MongoDB, newUser)
+		err = operations.CreateUser(database.MongoDB, newUser)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

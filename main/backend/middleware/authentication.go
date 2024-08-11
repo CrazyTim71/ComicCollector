@@ -3,9 +3,7 @@ package middleware
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/operations"
-	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/utils/crypt"
-	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -85,41 +83,5 @@ func CheckJwtToken() gin.HandlerFunc {
 		c.Set("userId", jwtToken["userId"])
 		c.Set("loggedIn", true)
 		c.Next()
-	}
-}
-
-func VerifyAdmin() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// check if the user is logged in
-		loggedIn, exists := c.Get("loggedIn")
-		if !exists || !loggedIn.(bool) {
-			c.Redirect(http.StatusSeeOther, "/login")
-			c.Abort()
-			return
-		}
-
-		userId, err := webcontext.GetUserId(c)
-		if err != nil {
-			log.Println(err)
-			c.Redirect(http.StatusSeeOther, "/login")
-			c.Abort()
-			return
-		}
-
-		isAdmin, err := groups.CheckUserGroup(userId, groups.Administrator)
-		if err != nil {
-			log.Println(err)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
-		if isAdmin {
-			c.Next()
-		} else {
-			c.JSON(http.StatusForbidden, gin.H{"message": "Not enough permissions to view this site", "error": true})
-			c.Abort()
-			return
-		}
 	}
 }

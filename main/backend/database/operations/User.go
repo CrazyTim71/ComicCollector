@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func SaveUser(db *mongo.Database, newUser models.User) error {
+func CreateUser(db *mongo.Database, newUser models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
