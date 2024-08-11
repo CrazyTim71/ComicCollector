@@ -3,6 +3,7 @@ package operations
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
+	"ComicCollector/main/backend/utils"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -46,8 +47,8 @@ func CreatePermission(name string, description string) (models.Permission, error
 	permission.ID = primitive.NewObjectID()
 	permission.Name = name
 	permission.Description = description
-	permission.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	permission.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	permission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	permission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	// check if permission already exists
 	_, err := GetPermissionByName(database.MongoDB, permission.Name)

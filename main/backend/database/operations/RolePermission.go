@@ -3,6 +3,7 @@ package operations
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
+	"ComicCollector/main/backend/utils"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -62,8 +63,8 @@ func CreateRolePermission(role models.Role, permission models.Permission) (model
 	rolePermission.RoleId = role.ID
 	rolePermission.PermissionId = permission.ID
 	rolePermission.Name = role.Name + "_" + permission.Name
-	rolePermission.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	rolePermission.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	rolePermission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	rolePermission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	// check if rolePermission already exists
 	_, err := GetRolePermissionByName(database.MongoDB, rolePermission.Name)

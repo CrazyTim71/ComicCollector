@@ -5,6 +5,7 @@ import (
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/utils/crypt"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -97,21 +98,15 @@ func VerifyAdmin() gin.HandlerFunc {
 			return
 		}
 
-		userId, exists := c.Get("userId")
-		if !exists {
+		userId, err := webcontext.GetUserId(c)
+		if err != nil {
+			log.Println(err)
 			c.Redirect(http.StatusSeeOther, "/login")
 			c.Abort()
 			return
 		}
 
-		id, err := primitive.ObjectIDFromHex(userId.(string))
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
-		isAdmin, err := groups.CheckUserGroup(id, groups.Administrator)
+		isAdmin, err := groups.CheckUserGroup(userId, groups.Administrator)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})

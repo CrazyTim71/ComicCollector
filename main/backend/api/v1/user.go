@@ -6,6 +6,7 @@ import (
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions"
 	"ComicCollector/main/backend/middleware"
+	"ComicCollector/main/backend/utils"
 	"ComicCollector/main/backend/utils/Joi"
 	"ComicCollector/main/backend/utils/crypt"
 	"errors"
@@ -42,6 +43,14 @@ func UserHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		func(c *gin.Context) {
 			id := c.Param("id")
+
+			// TODO : use this
+			//userId, err := webcontext.GetUserId(c)
+			//if err != nil {
+			//	log.Println(err)
+			//	c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+			//	return
+			//}
 
 			userId, exits := c.Get("userId")
 			if !exits {
@@ -197,7 +206,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				newUser.Username = username
 				newUser.Password = hashedPW
 				newUser.CreatedAt = existingUser.CreatedAt
-				newUser.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+				newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 				result, err := operations.UpdateUserById(database.MongoDB, objID, newUser)
 				if err != nil {

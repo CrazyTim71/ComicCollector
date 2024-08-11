@@ -5,6 +5,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
+	"ComicCollector/main/backend/utils"
 	"ComicCollector/main/backend/utils/crypt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
@@ -115,16 +116,16 @@ func PerformFirstRunTasks() error {
 	//admin_NormalUserRole.UserId = AdminUser.ID
 	//admin_NormalUserRole.RoleId = UserRole.ID
 	//admin_NormalUserRole.Name = AdminUser.Username + "_" + UserRole.Name
-	//admin_NormalUserRole.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	//admin_NormalUserRole.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	//admin_NormalUserRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	//admin_NormalUserRole.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 	//
 	//var testuser_NormalUserRole models.UserRole
 	//testuser_NormalUserRole.ID = primitive.NewObjectID()
 	//testuser_NormalUserRole.UserId = NormalUser.ID
 	//testuser_NormalUserRole.RoleId = UserRole.ID
 	//testuser_NormalUserRole.Name = NormalUser.Username + "_" + UserRole.Name
-	//testuser_NormalUserRole.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	//testuser_NormalUserRole.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	//testuser_NormalUserRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	//testuser_NormalUserRole.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 	//
 	//// assigns the administrator role
 	//var AdminUserRole models.UserRole
@@ -132,8 +133,8 @@ func PerformFirstRunTasks() error {
 	//AdminUserRole.UserId = AdminUser.ID
 	//AdminUserRole.RoleId = AdminRole.ID
 	//AdminUserRole.Name = AdminUser.Username + "_" + AdminRole.Name
-	//AdminUserRole.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	//AdminUserRole.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	//AdminUserRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	//AdminUserRole.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 	//
 	//err = operations.SaveUserRole(database.MongoDB, admin_NormalUserRole)
 	//if err != nil {
@@ -165,8 +166,8 @@ func createAdminUser() (models.User, error) {
 	adminUser.ID = primitive.NewObjectID()
 	adminUser.Password = hashedPW
 	adminUser.Username = "admin"
-	adminUser.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-	adminUser.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	adminUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	adminUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	err = operations.SaveUser(database.MongoDB, adminUser)
 	if err != nil {
@@ -193,8 +194,8 @@ func createNormalUser() (models.User, error) {
 	normalUser.ID = primitive.NewObjectID()
 	normalUser.Password = hashedPW
 	normalUser.Username = "testuser"
-	normalUser.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-	normalUser.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	normalUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	normalUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	err = operations.SaveUser(database.MongoDB, normalUser)
 	if err != nil {
@@ -215,15 +216,15 @@ func createNormalUser() (models.User, error) {
 //	adminRole.ID = primitive.NewObjectID()
 //	adminRole.Name = "Administrator"
 //	adminRole.Description = "Gives a user administrator access"
-//	adminRole.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-//	adminRole.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+//	adminRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+//	adminRole.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 //
 //	var viewAllUsersPermission models.Permission
 //	viewAllUsersPermission.ID = primitive.NewObjectID()
 //	viewAllUsersPermission.Name = permissions.UserViewAll.Name
 //	viewAllUsersPermission.Description = permissions.UserViewAll.Description
-//	viewAllUsersPermission.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-//	viewAllUsersPermission.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+//	viewAllUsersPermission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+//	viewAllUsersPermission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 //
 //	// allows an administrator to view all users
 //	var AdminRolePermission models.RolePermission
@@ -256,15 +257,15 @@ func createNormalUser() (models.User, error) {
 //	userRole.ID = primitive.NewObjectID()
 //	userRole.Name = "User"
 //	userRole.Description = "All users are part of this standard group"
-//	userRole.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-//	userRole.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+//	userRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+//	userRole.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 //
 //	var PermissionUserViewSelf models.Permission
 //	PermissionUserViewSelf.ID = primitive.NewObjectID()
 //	PermissionUserViewSelf.Name = permissions.UserViewSelf.Name
 //	PermissionUserViewSelf.Description = permissions.UserViewSelf.Description
-//	PermissionUserViewSelf.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-//	PermissionUserViewSelf.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+//	PermissionUserViewSelf.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+//	PermissionUserViewSelf.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 //
 //	// assign the permission to the group
 //	var RolePermissionUserSelfView models.RolePermission

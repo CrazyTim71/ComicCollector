@@ -5,6 +5,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
+	"ComicCollector/main/backend/utils"
 	"ComicCollector/main/backend/utils/Joi"
 	"ComicCollector/main/backend/utils/crypt"
 	"ComicCollector/main/backend/utils/env"
@@ -86,8 +87,8 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		newUser.ID = primitive.NewObjectID()
 		newUser.Username = username
 		newUser.Password = hashedPW
-		newUser.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-		newUser.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+		newUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+		newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 		err = operations.SaveUser(database.MongoDB, newUser)
 		if err != nil {

@@ -3,6 +3,7 @@ package operations
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
+	"ComicCollector/main/backend/utils"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -62,8 +63,8 @@ func CreateUserRole(user models.User, role models.Role) (models.UserRole, error)
 	userRole.UserId = user.ID
 	userRole.RoleId = role.ID
 	userRole.Name = user.Username + "_" + role.Name
-	userRole.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	userRole.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	userRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	userRole.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	// check if userRole already exists
 	_, err := GetUserRoleByName(database.MongoDB, userRole.Name)

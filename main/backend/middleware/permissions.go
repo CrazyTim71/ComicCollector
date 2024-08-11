@@ -5,9 +5,9 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
@@ -27,22 +27,16 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 		}
 
 		// get the userId
-		userId, exists := c.Get("userId")
-		if !exists {
+		userId, err := webcontext.GetUserId(c)
+		if err != nil {
+			log.Println(err)
 			c.Redirect(http.StatusSeeOther, "/login")
 			c.Abort()
 			return
 		}
 
-		id, err := primitive.ObjectIDFromHex(userId.(string))
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
 		// check if user exists
-		user, err := operations.GetUserById(database.MongoDB, id)
+		user, err := operations.GetUserById(database.MongoDB, userId)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				log.Println(err)
@@ -116,23 +110,16 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 			return
 		}
 
-		// get the userId
-		userId, exists := c.Get("userId")
-		if !exists {
+		userId, err := webcontext.GetUserId(c)
+		if err != nil {
+			log.Println(err)
 			c.Redirect(http.StatusSeeOther, "/login")
 			c.Abort()
 			return
 		}
 
-		id, err := primitive.ObjectIDFromHex(userId.(string))
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
 		// check if user exists
-		user, err := operations.GetUserById(database.MongoDB, id)
+		user, err := operations.GetUserById(database.MongoDB, userId)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				log.Println(err)

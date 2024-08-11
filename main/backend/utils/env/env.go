@@ -5,10 +5,12 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"time"
 )
 
 const VERSION = "v0.1"
 
+// default values as fallback
 var SERVER_HOST = "127.0.0.1"
 var SERVER_PORT = "8080"
 var ENV_FILE_LOCATION = ".env"
@@ -16,8 +18,10 @@ var MONGODB_DBNAME = "ComicCollector"
 var MONGODB_URI = ""
 var RSA_FILENAME = "rsa_private_key.pem"
 var SIGNUP_ENABLED = false
+var TIMEZONE = "Europe/Berlin"
 
 var Files embed.FS
+var Timezone *time.Location
 
 func InitEnvironment() bool {
 	if err := godotenv.Load(ENV_FILE_LOCATION); err != nil {
@@ -25,6 +29,11 @@ func InitEnvironment() bool {
 	}
 
 	return true
+}
+
+func InitTimezone() {
+	loc, _ := time.LoadLocation(GetTimezone())
+	Timezone = loc
 }
 
 func GetServerAddress() string {
@@ -80,9 +89,25 @@ func GetRSAFilename() string {
 
 func GetSignupEnabled() bool {
 	signupEnabled := os.Getenv("SIGNUP_ENABLED")
-	if signupEnabled == "true" {
+	if signupEnabled == "" {
+		log.Println("No 'SIGNUP_ENABLED' variable set in .env file")
+		log.Println("Defaulting to false")
+		SIGNUP_ENABLED = false
+	} else if signupEnabled == "true" {
 		SIGNUP_ENABLED = true
 	}
 
 	return SIGNUP_ENABLED
+}
+
+func GetTimezone() string {
+	timezone := os.Getenv("TIMEZONE")
+	if timezone == "" {
+		log.Println("No 'TIMEZONE' variable set in .env file")
+		log.Println("Defaulting to " + TIMEZONE)
+	} else {
+		TIMEZONE = timezone
+	}
+
+	return TIMEZONE
 }

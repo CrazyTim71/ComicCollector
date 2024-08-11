@@ -3,6 +3,7 @@ package operations
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
+	"ComicCollector/main/backend/utils"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,8 +37,8 @@ func CreateRole(name string, description string) (models.Role, error) {
 	role.ID = primitive.NewObjectID()
 	role.Name = name
 	role.Description = description
-	role.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	role.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	role.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	role.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	err := SaveRole(database.MongoDB, role)
 	if err != nil {

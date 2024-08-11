@@ -30,6 +30,9 @@ func main() {
 	// init the environment
 	env.InitEnvironment()
 
+	// init the timezone
+	env.InitTimezone()
+
 	// init the db
 	database.InitDatabase()
 
