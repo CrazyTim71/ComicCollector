@@ -69,20 +69,11 @@ func CheckUserGroup(userID primitive.ObjectID, group UserGroup) (bool, error) {
 		return false, err
 	}
 
-	// get all roles by the user id
-	userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
-	if err != nil {
-		if !errors.Is(err, mongo.ErrNoDocuments) {
-			log.Println(err)
-		}
-		return false, err
-	}
-
 	// check if the user has the desired role
 	isUserInGroup := false
-	for _, userRole := range userRoles {
+	for _, roleId := range user.Roles {
 		// get single role
-		role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
+		role, err := operations.GetRoleById(database.MongoDB, roleId)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				log.Println(err)

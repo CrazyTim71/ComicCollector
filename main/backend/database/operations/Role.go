@@ -31,12 +31,13 @@ func GetRoleById(db *mongo.Database, roleId primitive.ObjectID) (models.Role, er
 	return role, err
 }
 
-func CreateRole(name string, description string) (models.Role, error) {
+func CreateRole(name string, description string, permissions []primitive.ObjectID) (models.Role, error) {
 	var role models.Role
 
 	role.ID = primitive.NewObjectID()
 	role.Name = name
 	role.Description = description
+	role.Permissions = permissions
 	role.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 	role.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 

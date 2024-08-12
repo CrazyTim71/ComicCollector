@@ -41,6 +41,26 @@ func GetPermissionByName(db *mongo.Database, permissionName string) (models.Perm
 	return permission, err
 }
 
+func GetAllPermissionsFromRole(db *mongo.Database, roleId primitive.ObjectID) ([]models.Permission, error) {
+	var permissions []models.Permission
+
+	role, err := GetRoleById(db, roleId)
+	if err != nil {
+		return permissions, err
+	}
+
+	for _, permissionId := range role.Permissions {
+		permission, err := GetPermissionById(db, permissionId)
+		if err != nil {
+			return permissions, err
+		}
+
+		permissions = append(permissions, permission)
+	}
+
+	return permissions, nil
+}
+
 func CreatePermission(name string, description string) (models.Permission, error) {
 	var permission models.Permission
 
@@ -51,9 +71,9 @@ func CreatePermission(name string, description string) (models.Permission, error
 	permission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	// check if permission already exists
-	_, err := GetPermissionByName(database.MongoDB, permission.Name)
+	existingPermission, err := GetPermissionByName(database.MongoDB, permission.Name)
 	if err == nil {
-		return permission, nil
+		return existingPermission, nil
 	}
 
 	err = SavePermission(database.MongoDB, permission)

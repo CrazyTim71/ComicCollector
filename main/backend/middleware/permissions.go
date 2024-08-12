@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
-	"strings"
 )
 
 // VerifyHasOnePermission checks if the user has at least one of the required permissions from requiredPermissions
@@ -47,33 +46,12 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 			return
 		}
 
-		// get all roles by the user id
-		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
-		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				log.Println(err)
-			}
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
 		// check if any role has the required permission
 		hasPermission := false
 		for _, requiredPermission := range requiredPermissions {
 			// get every role and check its permissions
-			for _, userRole := range userRoles {
-				role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
-				if err != nil {
-					if !errors.Is(err, mongo.ErrNoDocuments) {
-						log.Println(err)
-					}
-					c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-					c.Abort()
-					return
-				}
-
-				rolePermissions, err := operations.GetAllRolePermissionsByRoleId(database.MongoDB, role.ID)
+			for _, roleId := range user.Roles {
+				rolePermissions, err := operations.GetAllPermissionsFromRole(database.MongoDB, roleId)
 				if err != nil {
 					if !errors.Is(err, mongo.ErrNoDocuments) {
 						log.Println(err)
@@ -130,38 +108,17 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 			return
 		}
 
-		// get all roles by the user id
-		userRoles, err := operations.GetUserRolesByUserId(database.MongoDB, user.ID)
-		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				log.Println(err)
-			}
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
 		// check if any role has the required permission
 		hasPermission := false
 		for _, requiredPermission := range requiredPermissions {
 			// get every role and check its permissions
-			for _, userRole := range userRoles {
-				role, err := operations.GetRoleById(database.MongoDB, userRole.RoleId)
+			for _, roleId := range user.Roles {
+				rolePermissions, err := operations.GetAllPermissionsFromRole(database.MongoDB, roleId)
 				if err != nil {
 					if !errors.Is(err, mongo.ErrNoDocuments) {
 						log.Println(err)
 					}
 					c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-					c.Abort()
-					return
-				}
-
-				rolePermissions, err := operations.GetAllRolePermissionsByRoleId(database.MongoDB, role.ID)
-				if err != nil {
-					if !errors.Is(err, mongo.ErrNoDocuments) {
-						log.Println(err)
-					}
-					c.JSON(http.StatusForbidden, gin.H{"msg": "Not enough permissions to access this resource", "error": true})
 					c.Abort()
 					return
 				}
@@ -188,9 +145,9 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 	}
 }
 
-func containsPermission(slice []models.RolePermission, item string) bool {
+func containsPermission(slice []models.Permission, item string) bool {
 	for _, s := range slice {
-		if strings.Split(s.Name, "_")[1] == item {
+		if s.Name == item {
 			return true
 		}
 	}

@@ -90,6 +90,33 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		newUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 		newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
+		// create the restricted user permissions
+		var restrictedUserPermissionIds []primitive.ObjectID
+		for _, permission := range groups.RestrictedUser.Permissions {
+			perm, err := operations.CreatePermission(permission.Name, permission.Description)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				return
+			}
+			restrictedUserPermissionIds = append(restrictedUserPermissionIds, perm.ID)
+		}
+
+		// create the roles
+		restrictedUserRole, err := operations.CreateRole(
+			groups.RestrictedUser.Name,
+			groups.RestrictedUser.Description,
+			restrictedUserPermissionIds,
+		)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+			return
+		}
+
+		// add the role to the user
+		newUser.Roles = append(newUser.Roles, restrictedUserRole.ID)
+
 		err = operations.CreateUser(database.MongoDB, newUser)
 		if err != nil {
 			log.Println(err)
@@ -97,48 +124,6 @@ func RegisterHandler(rg *gin.RouterGroup) {
 			return
 		}
 
-		// add the user to the RestrictedUser role for approval
-		for _, permission := range groups.RestrictedUser.Permissions {
-			_, err := operations.CreatePermission(permission.Name, permission.Description)
-			if err != nil {
-				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
-				return
-			}
-		}
-
-		restrictedUserRole, err := operations.CreateRole(groups.RestrictedUser.Name, groups.RestrictedUser.Description)
-		if err != nil {
-			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
-			return
-		}
-
-		for _, permission := range groups.RestrictedUser.Permissions {
-			perm, err := operations.GetPermissionByName(database.MongoDB, permission.Name)
-			if err != nil {
-				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
-				return
-			}
-
-			_, err = operations.CreateRolePermission(restrictedUserRole, perm)
-			if err != nil {
-				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
-				return
-			}
-		}
-
-		// assign the user role
-		_, err = operations.CreateUserRole(newUser, restrictedUserRole)
-		if err != nil {
-			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
-			return
-		}
-
 		c.Redirect(http.StatusSeeOther, "/login")
-		//c.JSON(http.StatusOK, gin.H{"msg": "User was created successfully"})
 	})
 }

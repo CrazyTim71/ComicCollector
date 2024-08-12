@@ -68,4 +68,3 @@ func main() {
 }
 
 // TODO: settings to save things like the libraryName, isSignUpEnabled, ...
-// TODO: is user_permissions needed at all ?
