@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+// BookHandler api/v1/book
 func BookHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),

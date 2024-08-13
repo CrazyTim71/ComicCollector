@@ -19,6 +19,7 @@ import (
 	"time"
 )
 
+// RegisterHandler api/v1/register
 func RegisterHandler(rg *gin.RouterGroup) {
 	rg.POST("", func(c *gin.Context) {
 		if !env.GetSignupEnabled() {

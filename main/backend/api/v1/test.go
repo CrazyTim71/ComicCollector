@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// TestHandler api/v1/test
 func TestHandler(rg *gin.RouterGroup) {
 	rg.GET("", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{

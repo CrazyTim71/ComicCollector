@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// LoginHandler api/v1/login
 func LoginHandler(rg *gin.RouterGroup) {
 	rg.POST("", func(c *gin.Context) {
 		var requestBody struct {
