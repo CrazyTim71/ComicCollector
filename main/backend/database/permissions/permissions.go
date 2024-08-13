@@ -52,8 +52,19 @@ var (
 		Name:        "book:delete",
 		Description: "Allows deleting a book",
 	}
-	BookViewAll = Permission{
-		Name:        "book:viewAll",
-		Description: "Allows viewing all books",
+)
+
+var (
+	AuthorCreate = Permission{
+		Name:        "author:create",
+		Description: "Allows creating a new author",
+	}
+	AuthorModify = Permission{
+		Name:        "author:modify",
+		Description: "Allows modifying author information",
+	}
+	AuthorDelete = Permission{
+		Name:        "author:delete",
+		Description: "Allows deleting an author",
 	}
 )

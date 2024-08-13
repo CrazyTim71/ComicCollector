@@ -22,16 +22,26 @@ func SaveRole(db *mongo.Database, newRole models.Role) error {
 }
 
 func GetRoleById(db *mongo.Database, roleId primitive.ObjectID) (models.Role, error) {
-	var role models.Role
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	var role models.Role
 	err := db.Collection("role").FindOne(ctx, bson.M{"_id": roleId}).Decode(&role)
 
 	return role, err
 }
 
-func CreateRole(name string, description string, permissions []primitive.ObjectID) (models.Role, error) {
+func GetRoleByName(db *mongo.Database, name string) (models.Role, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var role models.Role
+	err := db.Collection("role").FindOne(ctx, bson.M{"name": name}).Decode(&role)
+
+	return role, err
+}
+
+func CreateRole(db *mongo.Database, name string, description string, permissions []primitive.ObjectID) (models.Role, error) {
 	var role models.Role
 
 	role.ID = primitive.NewObjectID()
@@ -41,10 +51,13 @@ func CreateRole(name string, description string, permissions []primitive.ObjectI
 	role.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 	role.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err := SaveRole(database.MongoDB, role)
-	if err != nil {
-		return role, err
+	// check if the role already exists
+	existingRole, err := GetRoleByName(db, name)
+	if err == nil {
+		return existingRole, nil
 	}
 
-	return role, nil
+	err = SaveRole(database.MongoDB, role)
+
+	return role, err
 }

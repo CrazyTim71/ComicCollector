@@ -51,11 +51,11 @@ func PerformFirstRunTasks() error {
 	}
 
 	// create the roles
-	normalRole, err := operations.CreateRole(groups.User.Name, groups.User.Description, userPermissionIds)
+	normalRole, err := operations.CreateRole(database.MongoDB, groups.User.Name, groups.User.Description, userPermissionIds)
 	if err != nil {
 		return err
 	}
-	adminRole, err := operations.CreateRole(groups.Administrator.Name, groups.Administrator.Description, adminPermissionIds)
+	adminRole, err := operations.CreateRole(database.MongoDB, groups.Administrator.Name, groups.Administrator.Description, adminPermissionIds)
 	if err != nil {
 		return err
 	}

@@ -20,4 +20,10 @@ func ApiHandler(rg *gin.RouterGroup) {
 
 	book := rg.Group("/book")
 	BookHandler(book)
+
+	author := rg.Group("/author")
+	AuthorHandler(author)
+
+	bookEdition := rg.Group("/book/edition") // TODO: check if this works
+	BookEditionHandler(bookEdition)
 }

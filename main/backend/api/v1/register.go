@@ -6,7 +6,7 @@ import (
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/utils"
-	"ComicCollector/main/backend/utils/Joi"
+	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
 	"ComicCollector/main/backend/utils/env"
 	"github.com/gin-gonic/gin"
@@ -46,13 +46,13 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		}
 
 		// check if username and password are allowed
-		if err := Joi.UsernameSchema.Validate(requestBody.Username); err != nil {
+		if err := JoiHelper.UsernameSchema.Validate(requestBody.Username); err != nil {
 			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid username. Please remove all invalid characters and try again.", "error": true})
 			return
 		}
 
-		if err := Joi.PasswordSchema.Validate(requestBody.Password); err != nil {
+		if err := JoiHelper.PasswordSchema.Validate(requestBody.Password); err != nil {
 			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid password. Please follow the password rules.", "error": true})
 			return
@@ -105,6 +105,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 
 		// create the roles
 		restrictedUserRole, err := operations.CreateRole(
+			database.MongoDB,
 			groups.RestrictedUser.Name,
 			groups.RestrictedUser.Description,
 			restrictedUserPermissionIds,

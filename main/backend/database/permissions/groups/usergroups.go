@@ -31,7 +31,11 @@ var (
 			permissions.BookCreate,
 			permissions.BookModify,
 			permissions.BookDelete,
-			permissions.BookViewAll, // nothing special
+
+			// author stuff
+			permissions.AuthorCreate,
+			permissions.AuthorModify,
+			permissions.AuthorDelete,
 		},
 	}
 
@@ -45,7 +49,9 @@ var (
 			permissions.UserDeleteSelf,
 
 			// book stuff
-			permissions.BookViewAll, // nothing special
+
+			// author stuff
+			permissions.AuthorCreate,
 		},
 	}
 

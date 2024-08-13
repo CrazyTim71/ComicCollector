@@ -23,9 +23,6 @@ func BookHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
-		middleware.VerifyHasAllPermission(
-			permissions.BookViewAll,
-		),
 		func(c *gin.Context) {
 			// returns all books
 			books, err := operations.GetAllBooks(database.MongoDB)
@@ -34,15 +31,17 @@ func BookHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
+
+			if books == nil {
+				books = []models.Book{}
+			}
+
 			c.JSON(http.StatusOK, books)
 		})
 
 	rg.GET("/:id",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
-		middleware.VerifyHasAllPermission(
-			permissions.BookViewAll,
-		),
 		func(c *gin.Context) {
 			id := c.Param("id")
 			objID, err := primitive.ObjectIDFromHex(id)
@@ -63,6 +62,7 @@ func BookHandler(rg *gin.RouterGroup) {
 
 	rg.POST("",
 		middleware.CheckJwtToken(),
+		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BookCreate,
 		),

@@ -7,7 +7,7 @@ import (
 	"ComicCollector/main/backend/database/permissions"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
-	"ComicCollector/main/backend/utils/Joi"
+	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -36,6 +36,11 @@ func UserHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
+
+			if users == nil {
+				users = []models.User{}
+			}
+
 			c.JSON(http.StatusOK, users)
 		})
 
@@ -147,13 +152,13 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				// check if username and password are allowed
-				if err := Joi.UsernameSchema.Validate(requestBody.Username); err != nil {
+				if err := JoiHelper.UsernameSchema.Validate(requestBody.Username); err != nil {
 					c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid username. Please remove all invalid characters and try again.", "error": true})
 					log.Println(err)
 					return
 				}
 
-				if err := Joi.PasswordSchema.Validate(requestBody.Password); err != nil {
+				if err := JoiHelper.PasswordSchema.Validate(requestBody.Password); err != nil {
 					c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid password. Please follow the password rules.", "error": true})
 					log.Println(err)
 					return
