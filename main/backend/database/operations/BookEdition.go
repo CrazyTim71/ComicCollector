@@ -53,13 +53,13 @@ func CreateBookEdition(db *mongo.Database, bookEdition models.BookEdition) error
 	return err
 }
 
-func UpdateBookEdition(db *mongo.Database, bookEdition models.BookEdition) error {
+func UpdateBookEdition(db *mongo.Database, id primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := db.Collection("book_edition").UpdateOne(ctx, bson.M{"_id": bookEdition.ID}, bson.M{"$set": bookEdition})
+	result, err := db.Collection("book_edition").UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": data})
 
-	return err
+	return result, err
 }
 
 func DeleteBookEdition(db *mongo.Database, id primitive.ObjectID) error {

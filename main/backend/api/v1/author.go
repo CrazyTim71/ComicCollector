@@ -8,7 +8,6 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
-	"ComicCollector/main/backend/utils/JoiHelper"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -77,11 +76,11 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			//validate the user input
-			err := JoiHelper.UserInput.Validate(requestBody.Name)
+			// validate the user input
+			err := utils.ValidateRequestBody(requestBody)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid name. Please remove all invalid characters and try again.", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
 				return
 			}
 
@@ -102,6 +101,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 			var newAuthor models.Author
 			newAuthor.ID = primitive.NewObjectID()
 			newAuthor.Name = requestBody.Name
+			newAuthor.Description = requestBody.Description
 			newAuthor.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newAuthor.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
@@ -141,15 +141,18 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			//validate the user input
-			// TODO: validate all fields
-			for _, v := range requestBody {
-
-			}
-			err = JoiHelper.UserInput.Validate(requestBody.Name)
+			// validate the user input
+			err = utils.ValidateRequestBody(requestBody)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid name. Please remove all invalid characters and try again.", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
+				return
+			}
+
+			// clean the request body from empty fields to receive only the fields that need to be updated
+			updateData := utils.CleanEmptyFields(&requestBody)
+			if len(updateData) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
 
@@ -161,14 +164,14 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// update the author
-			// TODO: check and update all fields
-			existingAuthor.Name = requestBody.Name
-
-			err = operations.UpdateAuthor(database.MongoDB, existingAuthor)
+			result, err := operations.UpdateAuthor(database.MongoDB, existingAuthor.ID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				return
+			}
+			if result.ModifiedCount == 0 {
+				c.JSON(http.StatusNotModified, gin.H{"msg": "Nothing was updated", "error": true})
 				return
 			}
 

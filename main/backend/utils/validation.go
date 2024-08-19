@@ -1,0 +1,110 @@
+package utils
+
+import (
+	"ComicCollector/main/backend/utils/JoiHelper"
+	"errors"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
+	"reflect"
+)
+
+func ContainsNilObjectID(array []primitive.ObjectID) bool {
+	for _, id := range array {
+		if id.IsZero() || id == primitive.NilObjectID {
+			return true
+		}
+	}
+	return false
+}
+
+func ValidateRequestBody(requestBody interface{}) error {
+	if requestBody == nil {
+		return errors.New("request body cannot be nil")
+	}
+
+	// Iterate over all fields and validate them
+	v := reflect.ValueOf(requestBody)
+	t := reflect.TypeOf(requestBody)
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := field.Type()
+		fieldTag := t.Field(i).Tag.Get("binding")
+
+		// Check if the field is required
+		isRequired := fieldTag == "required"
+
+		switch fieldType.Kind() {
+		case reflect.String:
+			if field.String() == "" {
+				if isRequired {
+					return errors.New(t.Field(i).Name + " is required")
+				} else {
+					// Skip validation if the field is not required
+					continue
+				}
+			}
+
+			err := JoiHelper.UserInput.Validate(field.String())
+			if err != nil {
+				log.Println(err)
+				return errors.New(v.Type().Field(i).Name + " is invalid")
+			}
+			continue
+		case reflect.Array: // primitive.ObjectID is an array
+			if fieldType == reflect.TypeOf(primitive.ObjectID{}) {
+				if field.Interface().(primitive.ObjectID).IsZero() {
+					return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+				}
+				continue
+			} else {
+				log.Println(v.Type().Field(i).Name + " is an array of unknown type")
+			}
+		case reflect.Slice: // []primitive.ObjectID is a slice
+			log.Println(v.Type().Field(i).Name + " is a slice")
+
+			if len(field.Interface().([]primitive.ObjectID)) == 0 {
+				return errors.New(v.Type().Field(i).Name + " is empty")
+			}
+			if fieldType.Elem() == reflect.TypeOf(primitive.ObjectID{}) {
+				if ContainsNilObjectID(field.Interface().([]primitive.ObjectID)) {
+					return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+				}
+				continue
+			} else {
+				log.Println(v.Type().Field(i).Name + " is a slice of unknown type")
+			}
+		default:
+			panic("unhandled default case")
+		}
+	}
+
+	return nil
+}
+
+func CleanEmptyFields(data interface{}) bson.M {
+	result := bson.M{}
+	v := reflect.ValueOf(data).Elem()
+
+	// Loop through each field in the struct
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldName := v.Type().Field(i).Tag.Get("json") // Get the JSON tag name
+
+		// If there's no json tag, or it's marked to be omitted, skip it
+		if fieldName == "" || fieldName == "-" {
+			continue
+		}
+
+		// Check if the field is empty. We only add non-empty fields to the result.
+		if !isEmptyValue(field) {
+			result[fieldName] = field.Interface()
+		}
+	}
+
+	return result
+}
+
+func isEmptyValue(v reflect.Value) bool {
+	return v.Interface() == reflect.Zero(v.Type()).Interface()
+}

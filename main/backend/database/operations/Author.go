@@ -53,13 +53,13 @@ func CreateAuthor(db *mongo.Database, author models.Author) error {
 	return err
 }
 
-func UpdateAuthor(db *mongo.Database, author models.Author) error {
+func UpdateAuthor(db *mongo.Database, id primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := db.Collection("author").UpdateOne(ctx, bson.M{"_id": author.ID}, bson.M{"$set": author})
+	result, err := db.Collection("author").UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": data})
 
-	return err
+	return result, err
 }
 
 func DeleteAuthor(db *mongo.Database, id primitive.ObjectID) error {
