@@ -36,6 +36,11 @@ var (
 			permissions.AuthorCreate,
 			permissions.AuthorModify,
 			permissions.AuthorDelete,
+
+			// book edition stuff
+			permissions.BookEditionCreate,
+			permissions.BookEditionModify,
+			permissions.BookEditionDelete,
 		},
 	}
 

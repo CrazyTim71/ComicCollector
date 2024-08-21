@@ -68,3 +68,18 @@ var (
 		Description: "Allows deleting an author",
 	}
 )
+
+var (
+	BookEditionCreate = Permission{
+		Name:        "bookEdition:create",
+		Description: "Allows creating a new book edition",
+	}
+	BookEditionModify = Permission{
+		Name:        "bookEdition:modify",
+		Description: "Allows modifying book edition information",
+	}
+	BookEditionDelete = Permission{
+		Name:        "bookEdition:delete",
+		Description: "Allows deleting a book edition",
+	}
+)

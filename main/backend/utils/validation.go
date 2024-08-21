@@ -52,28 +52,25 @@ func ValidateRequestBody(requestBody interface{}) error {
 			}
 			continue
 		case reflect.Array: // primitive.ObjectID is an array
-			if fieldType == reflect.TypeOf(primitive.ObjectID{}) {
-				if field.Interface().(primitive.ObjectID).IsZero() {
-					return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
-				}
-				continue
-			} else {
-				log.Println(v.Type().Field(i).Name + " is an array of unknown type")
+			if fieldType != reflect.TypeOf(primitive.ObjectID{}) {
+				return errors.New(v.Type().Field(i).Name + " is an array of unknown type")
 			}
-		case reflect.Slice: // []primitive.ObjectID is a slice
-			log.Println(v.Type().Field(i).Name + " is a slice")
+			if field.Interface().(primitive.ObjectID).IsZero() {
+				return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+			}
 
+			continue
+		case reflect.Slice: // []primitive.ObjectID is a slice
 			if len(field.Interface().([]primitive.ObjectID)) == 0 {
 				return errors.New(v.Type().Field(i).Name + " is empty")
 			}
-			if fieldType.Elem() == reflect.TypeOf(primitive.ObjectID{}) {
-				if ContainsNilObjectID(field.Interface().([]primitive.ObjectID)) {
-					return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
-				}
-				continue
-			} else {
-				log.Println(v.Type().Field(i).Name + " is a slice of unknown type")
+			if fieldType.Elem() != reflect.TypeOf(primitive.ObjectID{}) {
+				return errors.New(v.Type().Field(i).Name + " is a slice of unknown type")
 			}
+			if ContainsNilObjectID(field.Interface().([]primitive.ObjectID)) {
+				return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+			}
+			continue
 		default:
 			panic("unhandled default case")
 		}
