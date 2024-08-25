@@ -34,7 +34,7 @@ func GetBookById(db *mongo.Database, id primitive.ObjectID) (models.Book, error)
 	return book, err
 }
 
-func CreateBook(db *mongo.Database, book models.Book) error {
+func InsertBook(db *mongo.Database, book models.Book) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

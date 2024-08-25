@@ -63,12 +63,12 @@ func PerformFirstRunTasks() error {
 	AdminUser.Roles = append(AdminUser.Roles, adminRole.ID, normalRole.ID)
 	NormalUser.Roles = append(NormalUser.Roles, normalRole.ID)
 
-	err = operations.CreateUser(database.MongoDB, AdminUser)
+	err = operations.InsertUser(database.MongoDB, AdminUser)
 	if err != nil {
 		return err
 	}
 
-	err = operations.CreateUser(database.MongoDB, NormalUser)
+	err = operations.InsertUser(database.MongoDB, NormalUser)
 	if err != nil {
 		return err
 	}

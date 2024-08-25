@@ -21,6 +21,9 @@ var (
 		Name:        "Administrator",
 		Description: "Full access to all features",
 		Permissions: []permissions.Permission{
+			//global stuff
+			permissions.GlobalEnableEndpointAccess,
+
 			// user stuff
 			permissions.UserViewAll,
 			permissions.UserModifyAll,
@@ -41,6 +44,16 @@ var (
 			permissions.BookEditionCreate,
 			permissions.BookEditionModify,
 			permissions.BookEditionDelete,
+
+			// book type stuff
+			permissions.BookTypeCreate,
+			permissions.BookTypeModify,
+			permissions.BookTypeDelete,
+
+			// location stuff
+			permissions.LocationCreate,
+			permissions.LocationModify,
+			permissions.LocationDelete,
 		},
 	}
 
@@ -48,6 +61,9 @@ var (
 		Name:        "User",
 		Description: "Basic access to all features",
 		Permissions: []permissions.Permission{
+			//global stuff
+			permissions.GlobalEnableEndpointAccess,
+
 			// user stuff
 			permissions.UserViewSelf,
 			permissions.UserModifySelf,
@@ -57,6 +73,15 @@ var (
 
 			// author stuff
 			permissions.AuthorCreate,
+
+			// book edition stuff
+			permissions.BookEditionCreate,
+
+			// book type stuff
+			permissions.BookTypeCreate,
+
+			// location stuff
+			permissions.LocationCreate,
 		},
 	}
 

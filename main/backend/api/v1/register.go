@@ -119,7 +119,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		// add the role to the user
 		newUser.Roles = append(newUser.Roles, restrictedUserRole.ID)
 
-		err = operations.CreateUser(database.MongoDB, newUser)
+		err = operations.InsertUser(database.MongoDB, newUser)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

@@ -6,6 +6,13 @@ type Permission struct {
 }
 
 var (
+	GlobalEnableEndpointAccess = Permission{
+		Name:        "global:EnableEndpointAccess",
+		Description: "Gives an user the ability to request data from the endpoints",
+	}
+)
+
+var (
 	UserViewSelf = Permission{
 		Name:        "user:viewSelf",
 		Description: "Allows a user to view their own information",
@@ -81,5 +88,34 @@ var (
 	BookEditionDelete = Permission{
 		Name:        "bookEdition:delete",
 		Description: "Allows deleting a book edition",
+	}
+)
+
+var (
+	BookTypeCreate = Permission{
+		Name:        "bookType:create",
+		Description: "Allows creating a new book type",
+	}
+	BookTypeModify = Permission{
+		Name:        "bookType:modify",
+		Description: "Allows modifying book type information",
+	}
+	BookTypeDelete = Permission{
+		Name: "bookType:delete",
+	}
+)
+
+var (
+	LocationCreate = Permission{
+		Name:        "location:create",
+		Description: "Allows creating a new location",
+	}
+	LocationModify = Permission{
+		Name:        "location:modify",
+		Description: "Allows modifying location information",
+	}
+	LocationDelete = Permission{
+		Name:        "location:delete",
+		Description: "Allows deleting a location",
 	}
 )

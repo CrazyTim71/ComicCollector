@@ -24,6 +24,12 @@ func ApiHandler(rg *gin.RouterGroup) {
 	author := rg.Group("/author")
 	AuthorHandler(author)
 
-	bookEdition := rg.Group("/book/edition") // TODO: check if this works
+	bookEdition := rg.Group("/book/edition")
 	BookEditionHandler(bookEdition)
+
+	bookType := rg.Group("/book/type")
+	BookTypeHandler(bookType)
+
+	location := rg.Group("/location")
+	LocationHandler(location)
 }

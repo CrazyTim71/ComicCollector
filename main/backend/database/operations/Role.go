@@ -12,13 +12,19 @@ import (
 	"time"
 )
 
-func SaveRole(db *mongo.Database, newRole models.Role) error {
+func GetAllRoles(db *mongo.Database) ([]models.Role, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := db.Collection("role").InsertOne(ctx, newRole, options.InsertOne())
+	cursor, err := db.Collection("role").Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	var roles []models.Role
+	err = cursor.All(ctx, &roles)
+
+	return roles, err
 }
 
 func GetRoleById(db *mongo.Database, roleId primitive.ObjectID) (models.Role, error) {
@@ -57,7 +63,34 @@ func CreateRole(db *mongo.Database, name string, description string, permissions
 		return existingRole, nil
 	}
 
-	err = SaveRole(database.MongoDB, role)
+	err = InsertRole(database.MongoDB, role)
 
 	return role, err
+}
+
+func InsertRole(db *mongo.Database, newRole models.Role) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := db.Collection("role").InsertOne(ctx, newRole, options.InsertOne())
+
+	return err
+}
+
+func UpdateRole(db *mongo.Database, roleId primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := db.Collection("role").UpdateOne(ctx, bson.M{"_id": roleId}, bson.M{"$set": data})
+
+	return result, err
+}
+
+func DeleteRole(db *mongo.Database, roleId primitive.ObjectID) (*mongo.DeleteResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := db.Collection("role").DeleteOne(ctx, bson.M{"_id": roleId})
+
+	return result, err
 }

@@ -213,7 +213,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				newUser.CreatedAt = existingUser.CreatedAt
 				newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-				result, err := operations.UpdateUserById(database.MongoDB, objID, newUser)
+				result, err := operations.UpdateUser(database.MongoDB, objID, newUser)
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -266,7 +266,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				// delete the user
-				err = operations.DeleteUserById(database.MongoDB, objID)
+				_, err = operations.DeleteUser(database.MongoDB, objID)
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

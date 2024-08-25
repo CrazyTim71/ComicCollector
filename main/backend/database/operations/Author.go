@@ -44,7 +44,7 @@ func GetAuthorByName(db *mongo.Database, name string) (models.Author, error) {
 	return author, err
 }
 
-func CreateAuthor(db *mongo.Database, author models.Author) error {
+func InsertAuthor(db *mongo.Database, author models.Author) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -62,11 +62,11 @@ func UpdateAuthor(db *mongo.Database, id primitive.ObjectID, data bson.M) (*mong
 	return result, err
 }
 
-func DeleteAuthor(db *mongo.Database, id primitive.ObjectID) error {
+func DeleteAuthor(db *mongo.Database, id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := db.Collection("author").DeleteOne(ctx, bson.M{"_id": id})
+	result, err := db.Collection("author").DeleteOne(ctx, bson.M{"_id": id})
 
-	return err
+	return result, err
 }

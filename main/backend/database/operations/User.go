@@ -53,7 +53,7 @@ func GetUserById(db *mongo.Database, id primitive.ObjectID) (models.User, error)
 	return existingUser, err
 }
 
-func CreateUser(db *mongo.Database, newUser models.User) error {
+func InsertUser(db *mongo.Database, newUser models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -62,7 +62,7 @@ func CreateUser(db *mongo.Database, newUser models.User) error {
 	return err
 }
 
-func UpdateUserById(db *mongo.Database, id primitive.ObjectID, updatedUser models.User) (*mongo.UpdateResult, error) {
+func UpdateUser(db *mongo.Database, id primitive.ObjectID, updatedUser models.User) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -71,11 +71,11 @@ func UpdateUserById(db *mongo.Database, id primitive.ObjectID, updatedUser model
 	return result, err
 }
 
-func DeleteUserById(db *mongo.Database, id primitive.ObjectID) error {
+func DeleteUser(db *mongo.Database, id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := db.Collection("user").DeleteOne(ctx, bson.M{"_id": id})
+	result, err := db.Collection("user").DeleteOne(ctx, bson.M{"_id": id})
 
-	return err
+	return result, err
 }

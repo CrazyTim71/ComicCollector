@@ -44,7 +44,7 @@ func GetBookEditionByName(db *mongo.Database, name string) (models.BookEdition, 
 	return bookEdition, err
 }
 
-func CreateBookEdition(db *mongo.Database, bookEdition models.BookEdition) error {
+func InsertBookEdition(db *mongo.Database, bookEdition models.BookEdition) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -62,11 +62,11 @@ func UpdateBookEdition(db *mongo.Database, id primitive.ObjectID, data bson.M) (
 	return result, err
 }
 
-func DeleteBookEdition(db *mongo.Database, id primitive.ObjectID) error {
+func DeleteBookEdition(db *mongo.Database, id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := db.Collection("book_edition").DeleteOne(ctx, bson.M{"_id": id})
+	result, err := db.Collection("book_edition").DeleteOne(ctx, bson.M{"_id": id})
 
-	return err
+	return result, err
 }

@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func AuthorHandler(rg *gin.RouterGroup) {
+func BookTypeHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
@@ -25,18 +25,18 @@ func AuthorHandler(rg *gin.RouterGroup) {
 			permissions.GlobalEnableEndpointAccess,
 		),
 		func(c *gin.Context) {
-			authors, err := operations.GetAllAuthors(database.MongoDB)
+			bookTypes, err := operations.GetAllBookTypes(database.MongoDB)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			if authors == nil {
-				authors = []models.Author{}
+			if bookTypes == nil {
+				bookTypes = []models.BookType{}
 			}
 
-			c.JSON(http.StatusOK, authors)
+			c.JSON(http.StatusOK, bookTypes)
 		})
 
 	rg.GET("/:id",
@@ -54,14 +54,14 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			author, err := operations.GetAuthorById(database.MongoDB, objID)
+			bookType, err := operations.GetBookTypeById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, author)
+			c.JSON(http.StatusOK, bookType)
 		})
 
 	rg.POST("",
@@ -69,7 +69,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.GlobalEnableEndpointAccess,
-			permissions.AuthorCreate,
+			permissions.BookTypeCreate,
 		),
 		func(c *gin.Context) {
 			var requestBody struct {
@@ -77,25 +77,25 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				Description string `json:"description" binding:"required"`
 			}
 
-			if err := c.ShouldBindJSON(&requestBody); err != nil {
+			err := c.ShouldBindJSON(&requestBody)
+			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request body", "error": true})
 				return
 			}
 
 			// validate the user input
-			err := utils.ValidateRequestBody(requestBody)
+			err = utils.ValidateRequestBody(requestBody)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
 				return
 			}
 
-			// check if the author already exists
-			_, err = operations.GetAuthorByName(database.MongoDB, requestBody.Name)
-			if err == nil { // err == nil in case the author already exists
-				log.Println(err)
-				c.JSON(http.StatusConflict, gin.H{"msg": "This author already exists", "error": true})
+			// check if the book type already exists
+			_, err = operations.GetBookTypeByName(database.MongoDB, requestBody.Name)
+			if err == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type already exists", "error": true})
 				return
 			} else if !errors.Is(err, mongo.ErrNoDocuments) {
 				// handle all other database errors, but ignore the NoDocuments error
@@ -105,21 +105,21 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			var newAuthor models.Author
-			newAuthor.ID = primitive.NewObjectID()
-			newAuthor.Name = requestBody.Name
-			newAuthor.Description = requestBody.Description
-			newAuthor.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newAuthor.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			var newBookType models.BookType
+			newBookType.ID = primitive.NewObjectID()
+			newBookType.Name = requestBody.Name
+			newBookType.Description = requestBody.Description
+			newBookType.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newBookType.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-			err = operations.InsertAuthor(database.MongoDB, newAuthor)
+			err = operations.InsertBookType(database.MongoDB, newBookType)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, newAuthor)
+			c.JSON(http.StatusOK, newBookType)
 		})
 
 	rg.PATCH("/:id",
@@ -127,7 +127,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.GlobalEnableEndpointAccess,
-			permissions.AuthorModify,
+			permissions.BookEditionModify,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -164,15 +164,16 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the author exists
-			_, err = operations.GetAuthorById(database.MongoDB, objID)
+			// check if the book type already exists
+			_, err = operations.GetBookTypeById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			result, err := operations.UpdateAuthor(database.MongoDB, objID, updateData)
+			// update the book type
+			result, err := operations.UpdateBookType(database.MongoDB, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -183,7 +184,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Author was updated successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Book type was updated successfully"})
 		})
 
 	rg.DELETE("/:id",
@@ -191,7 +192,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.GlobalEnableEndpointAccess,
-			permissions.AuthorDelete,
+			permissions.BookTypeDelete,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -202,21 +203,22 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the author exists
-			_, err = operations.GetAuthorById(database.MongoDB, objID)
+			// check if the book type exists
+			_, err = operations.GetBookTypeById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type doesn't exist", "error": true})
 				return
 			}
 
-			_, err = operations.DeleteAuthor(database.MongoDB, objID)
+			// delete the book type
+			_, err = operations.DeleteBookType(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Author was deleted successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Book type deleted", "error": false})
 		})
 }
