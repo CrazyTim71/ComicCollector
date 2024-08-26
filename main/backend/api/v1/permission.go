@@ -17,31 +17,33 @@ import (
 	"time"
 )
 
-func BookTypeHandler(rg *gin.RouterGroup) {
+func PermissionsHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
+		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			bookTypes, err := operations.GetAllBookTypes(database.MongoDB)
+			allPermissions, err := operations.GetAllPermissions(database.MongoDB)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			if bookTypes == nil {
-				bookTypes = []models.BookType{}
+			if allPermissions == nil {
+				allPermissions = []models.Permission{}
 			}
 
-			c.JSON(http.StatusOK, bookTypes)
+			c.JSON(http.StatusOK, allPermissions)
 		})
 
 	rg.GET("/:id",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
+		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
@@ -54,10 +56,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			bookType, err := operations.GetBookTypeById(database.MongoDB, objID)
+			permission, err := operations.GetPermissionById(database.MongoDB, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
-					c.JSON(http.StatusNotFound, gin.H{"msg": "Book type not found", "error": true})
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Permission not found", "error": true})
 					return
 				}
 				log.Println(err)
@@ -65,15 +67,16 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, bookType)
+			c.JSON(http.StatusOK, permission)
 		})
 
 	rg.POST("",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
+		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeCreate,
+			permissions.PermissionCreate,
 		),
 		func(c *gin.Context) {
 			var requestBody struct {
@@ -96,10 +99,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeByName(database.MongoDB, requestBody.Name)
+			// check if the permission already exists
+			_, err = operations.GetPermissionByName(database.MongoDB, requestBody.Name)
 			if err == nil {
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type already exists", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Permission already exists", "error": true})
 				return
 			} else if !errors.Is(err, mongo.ErrNoDocuments) {
 				// handle all other database errors, but ignore the NoDocuments error
@@ -109,29 +112,30 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			var newBookType models.BookType
-			newBookType.ID = primitive.NewObjectID()
-			newBookType.Name = requestBody.Name
-			newBookType.Description = requestBody.Description
-			newBookType.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newBookType.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			var newPermission models.Permission
+			newPermission.ID = primitive.NewObjectID()
+			newPermission.Name = requestBody.Name
+			newPermission.Description = requestBody.Description
+			newPermission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newPermission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-			err = operations.InsertBookType(database.MongoDB, newBookType)
+			err = operations.InsertPermission(database.MongoDB, newPermission)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, newBookType)
+			c.JSON(http.StatusCreated, newPermission)
 		})
 
 	rg.PATCH("/:id",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
+		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookEditionModify,
+			permissions.PermissionModify,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -168,16 +172,16 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the permission already exists
+			_, err = operations.GetPermissionById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Permission not found", "error": true})
 				return
 			}
 
-			// update the book type
-			result, err := operations.UpdateBookType(database.MongoDB, objID, updateData)
+			// update the permission
+			result, err := operations.UpdatePermission(database.MongoDB, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -188,15 +192,16 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was updated successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Permission was updated successfully"})
 		})
 
 	rg.DELETE("/:id",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
+		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeDelete,
+			permissions.PermissionDelete,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -207,22 +212,22 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the permission exists
+			_, err = operations.GetPermissionById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type doesn't exist", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Permission not found", "error": true})
 				return
 			}
 
-			// delete the book type
-			_, err = operations.DeleteBookType(database.MongoDB, objID)
+			// delete the permission
+			_, err = operations.DeletePermission(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was deleted successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Permission was deleted successfully"})
 		})
 }

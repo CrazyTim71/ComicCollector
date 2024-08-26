@@ -9,8 +9,10 @@ import (
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
 	"ComicCollector/main/backend/utils/env"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"io"
 	"log"
 	"net/http"
@@ -24,7 +26,7 @@ func BookHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
 			// returns all books
@@ -46,7 +48,7 @@ func BookHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -58,6 +60,10 @@ func BookHandler(rg *gin.RouterGroup) {
 
 			book, err := operations.GetBookById(database.MongoDB, objID)
 			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
+					return
+				}
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
@@ -70,43 +76,43 @@ func BookHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 			permissions.BookCreate,
 		),
 		func(c *gin.Context) {
-
-			// create a new book
 			var requestBody struct {
-				// ID          primitive.ObjectID `form:"id" bson:"_id"`
-				Title       string             `form:"title" binding:"required"`
-				Number      int                `form:"number" binding:"required"`
-				ReleaseDate string             `form:"release_date" binding:"required"`
-				Description string             `form:"description" binding:"required"`
-				Notes       string             `form:"notes" binding:"required"`
-				BookType    primitive.ObjectID `form:"book_type" binding:"required"`
-				BookEdition primitive.ObjectID `form:"book_edition" binding:"required"`
-				Printing    string             `form:"printing" binding:"required"`
-				ISBN        string             `form:"isbn" binding:"required"`
-				Price       string             `form:"price" binding:"required"`
-				Count       int                `form:"count" binding:"required"`
-
-				Author    primitive.ObjectID `form:"author" binding:"required"`
-				Publisher primitive.ObjectID `form:"publisher" binding:"required"`
-				Location  primitive.ObjectID `form:"location" binding:"required"`
-				Owner     primitive.ObjectID `form:"owner" binding:"required"`
-
-				// CoverImage  string             `form:"cover_image" binding:"required"`
-				// CreatedAt   primitive.DateTime `form:"created_at" bson:"created_at"`
-				// UpdatedAt   primitive.DateTime `form:"updated_at" bson:"updated_at"`
+				Title       string               `form:"title" binding:"required"`
+				Number      int                  `form:"number" binding:"required"`
+				ReleaseDate primitive.DateTime   `form:"release_date" binding:"required"`
+				CoverImage  []byte               `form:"cover_image" binding:"required"`
+				Description string               `form:"description" binding:"required"`
+				Notes       string               `form:"notes" binding:"required"`
+				Authors     []primitive.ObjectID `form:"authors" binding:"required"`
+				Publishers  []primitive.ObjectID `form:"publishers" binding:"required"`
+				Locations   []primitive.ObjectID `form:"locations" binding:"required"`
+				Owners      []primitive.ObjectID `form:"owners" binding:"required"`
+				BookType    primitive.ObjectID   `form:"book_type" binding:"required"`
+				BookEdition primitive.ObjectID   `form:"book_edition" binding:"required"`
+				Printing    string               `form:"printing" binding:"required"`
+				ISBN        string               `form:"isbn" binding:"required"`
+				Price       string               `form:"price" binding:"required"`
+				Count       int                  `form:"count" binding:"required"`
 			}
 
-			// TODO: verify the user input with joi
 			// TODO: handle the CoverImage file upload
 			// TODO: check if BookType, BookEdition, Author, Publisher, Location and Owner are valid
 
 			if err := c.ShouldBindJSON(&requestBody); err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request body", "error": true})
+				return
+			}
+
+			// validate the user input
+			err := utils.ValidateRequestBody(requestBody)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
 				return
 			}
 
@@ -169,23 +175,40 @@ func BookHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			newBook := models.Book{
-				ID:          primitive.NewObjectID(),
-				Title:       requestBody.Title,
-				Number:      requestBody.Number,
-				ReleaseDate: requestBody.ReleaseDate,
-				CoverImage:  imageData,
-				Description: requestBody.Description,
-				Notes:       requestBody.Notes,
-				BookType:    requestBody.BookType,
-				BookEdition: requestBody.BookEdition,
-				Printing:    requestBody.Printing,
-				ISBN:        requestBody.ISBN,
-				Price:       requestBody.Price,
-				Count:       requestBody.Count,
-				CreatedAt:   utils.ConvertToDateTime(time.DateTime, time.Now()),
-				UpdatedAt:   utils.ConvertToDateTime(time.DateTime, time.Now()),
+			// check if the book already exists
+			_, err = operations.GetBookByName(database.MongoDB, requestBody.Title)
+			if err == nil { // err == nil in case the book already exists
+				log.Println(err)
+				c.JSON(http.StatusConflict, gin.H{"msg": "This book already exists", "error": true})
+				return
+			} else if !errors.Is(err, mongo.ErrNoDocuments) {
+				// handle all other database errors, but ignore the NoDocuments error
+				// that's because this error is expected when the author doesn't exist
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal database error", "error": true})
+				return
 			}
+
+			var newBook models.Book
+			newBook.ID = primitive.NewObjectID()
+			newBook.Title = requestBody.Title
+			newBook.Number = requestBody.Number
+			newBook.ReleaseDate = requestBody.ReleaseDate
+			newBook.CoverImage = imageData
+			newBook.Description = requestBody.Description
+			newBook.Notes = requestBody.Notes
+			newBook.Authors = requestBody.Authors
+			newBook.Publishers = requestBody.Publishers
+			newBook.Locations = requestBody.Locations
+			newBook.Owners = requestBody.Owners
+			newBook.BookType = requestBody.BookType
+			newBook.BookEdition = requestBody.BookEdition
+			newBook.Printing = requestBody.Printing
+			newBook.ISBN = requestBody.ISBN
+			newBook.Price = requestBody.Price
+			newBook.Count = requestBody.Count
+			newBook.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newBook.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 			err = operations.InsertBook(database.MongoDB, newBook)
 			if err != nil {
@@ -193,6 +216,8 @@ func BookHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
+
+			c.JSON(http.StatusOK, newBook)
 		})
 
 	//rg.PATCH("")

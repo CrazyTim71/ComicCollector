@@ -4,6 +4,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -23,7 +24,7 @@ func GetAllLocations(db *mongo.Database) ([]models.Location, error) {
 	return locations, err
 }
 
-func GetLocationById(db *mongo.Database, id string) (models.Location, error) {
+func GetLocationById(db *mongo.Database, id primitive.ObjectID) (models.Location, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -52,7 +53,7 @@ func InsertLocation(db *mongo.Database, location models.Location) error {
 	return err
 }
 
-func UpdateLocation(db *mongo.Database, id string, data bson.M) (*mongo.UpdateResult, error) {
+func UpdateLocation(db *mongo.Database, id primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -61,7 +62,7 @@ func UpdateLocation(db *mongo.Database, id string, data bson.M) (*mongo.UpdateRe
 	return result, err
 }
 
-func DeleteLocation(db *mongo.Database, id string) (*mongo.DeleteResult, error) {
+func DeleteLocation(db *mongo.Database, id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

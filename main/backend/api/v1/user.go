@@ -49,14 +49,6 @@ func UserHandler(rg *gin.RouterGroup) {
 		func(c *gin.Context) {
 			id := c.Param("id")
 
-			// TODO : use this
-			//userId, err := webcontext.GetUserId(c)
-			//if err != nil {
-			//	log.Println(err)
-			//	c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			//	return
-			//}
-
 			userId, exits := c.Get("userId")
 			if !exits {
 				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
@@ -89,6 +81,10 @@ func UserHandler(rg *gin.RouterGroup) {
 
 			user, err := operations.GetUserById(database.MongoDB, objID)
 			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					c.JSON(http.StatusNotFound, gin.H{"msg": "User not found", "error": true})
+					return
+				}
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
@@ -134,9 +130,10 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				var requestBody struct {
-					Username         string `json:"username" binding:"required"`
-					Password         string `json:"password" binding:"required"`
-					PasswordRepeated string `json:"passwordRepeated" binding:"required"`
+					Username         string               `json:"username" binding:"required"`
+					Password         string               `json:"password" binding:"required"`
+					PasswordRepeated string               `json:"passwordRepeated" binding:"required"`
+					Roles            []primitive.ObjectID `json:"roles"`
 				}
 
 				if err := c.ShouldBindJSON(&requestBody); err != nil {
@@ -212,6 +209,19 @@ func UserHandler(rg *gin.RouterGroup) {
 				newUser.Password = hashedPW
 				newUser.CreatedAt = existingUser.CreatedAt
 				newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+
+				// check the user roles
+				if requestBody.Roles != nil && len(requestBody.Roles) > 0 && !utils.ContainsNilObjectID(requestBody.Roles) {
+					// check if the roles exist
+					if !operations.CheckIfAllRolesExist(database.MongoDB, requestBody.Roles) {
+						log.Println("Not all provided role ids exist/are valid")
+						c.JSON(http.StatusBadRequest, gin.H{"msg": "Not all provided role ids exist/are valid", "error": true})
+						return
+					}
+					newUser.Roles = requestBody.Roles
+				} else {
+					newUser.Roles = existingUser.Roles
+				}
 
 				result, err := operations.UpdateUser(database.MongoDB, objID, newUser)
 				if err != nil {

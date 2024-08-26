@@ -4,6 +4,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -23,7 +24,7 @@ func GetAllPublishers(db *mongo.Database) ([]models.Publisher, error) {
 	return publishers, err
 }
 
-func GetPublisherById(db *mongo.Database, id string) (models.Publisher, error) {
+func GetPublisherById(db *mongo.Database, id primitive.ObjectID) (models.Publisher, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -52,7 +53,7 @@ func InsertPublisher(db *mongo.Database, publisher models.Publisher) error {
 	return err
 }
 
-func UpdatePublisher(db *mongo.Database, id string, data bson.M) (*mongo.UpdateResult, error) {
+func UpdatePublisher(db *mongo.Database, id primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -61,7 +62,7 @@ func UpdatePublisher(db *mongo.Database, id string, data bson.M) (*mongo.UpdateR
 	return result, err
 }
 
-func DeletePublisher(db *mongo.Database, id string) (*mongo.DeleteResult, error) {
+func DeletePublisher(db *mongo.Database, id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

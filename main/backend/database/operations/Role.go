@@ -68,6 +68,21 @@ func CreateRole(db *mongo.Database, name string, description string, permissions
 	return role, err
 }
 
+func CheckIfAllRolesExist(db *mongo.Database, roleIds []primitive.ObjectID) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := db.Collection("role").Find(ctx, bson.M{"_id": bson.M{"$in": roleIds}})
+	if err != nil {
+		return false
+	}
+
+	var foundRoles []models.Role
+	err = cursor.All(ctx, &foundRoles)
+
+	return len(foundRoles) == len(roleIds)
+}
+
 func InsertRole(db *mongo.Database, newRole models.Role) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

@@ -6,9 +6,9 @@ type Permission struct {
 }
 
 var (
-	GlobalEnableEndpointAccess = Permission{
-		Name:        "global:EnableEndpointAccess",
-		Description: "Gives an user the ability to request data from the endpoints",
+	BasicApiAccess = Permission{
+		Name:        "basic:ApiAccess",
+		Description: "Gives an user the ability to request data from the api endpoints",
 	}
 )
 
@@ -117,5 +117,65 @@ var (
 	LocationDelete = Permission{
 		Name:        "location:delete",
 		Description: "Allows deleting a location",
+	}
+)
+
+var (
+	OwnerCreate = Permission{
+		Name:        "owner:create",
+		Description: "Allows creating a new owner",
+	}
+	OwnerModify = Permission{
+		Name:        "owner:modify",
+		Description: "Allows modifying owner information",
+	}
+	OwnerDelete = Permission{
+		Name:        "owner:delete",
+		Description: "Allows deleting an owner",
+	}
+)
+
+var (
+	PermissionCreate = Permission{
+		Name:        "permission:create",
+		Description: "Allows creating a new permission",
+	}
+	PermissionModify = Permission{
+		Name:        "permission:modify",
+		Description: "Allows modifying permission information",
+	}
+	PermissionDelete = Permission{
+		Name:        "permission:delete",
+		Description: "Allows deleting a permission",
+	}
+)
+
+var (
+	PublisherCreate = Permission{
+		Name:        "publisher:create",
+		Description: "Allows creating a new publisher",
+	}
+	PublisherModify = Permission{
+		Name:        "publisher:modify",
+		Description: "Allows modifying publisher information",
+	}
+	PublisherDelete = Permission{
+		Name:        "publisher:delete",
+		Description: "Allows deleting a publisher",
+	}
+)
+
+var (
+	RoleCreate = Permission{
+		Name:        "role:create",
+		Description: "Allows creating a new role",
+	}
+	RoleModify = Permission{
+		Name:        "role:modify",
+		Description: "Allows modifying role information",
+	}
+	RoleDelete = Permission{
+		Name:        "role:delete",
+		Description: "Allows deleting a role",
 	}
 )

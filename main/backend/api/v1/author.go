@@ -22,7 +22,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
 			authors, err := operations.GetAllAuthors(database.MongoDB)
@@ -43,7 +43,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -56,6 +56,10 @@ func AuthorHandler(rg *gin.RouterGroup) {
 
 			author, err := operations.GetAuthorById(database.MongoDB, objID)
 			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
+					return
+				}
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
@@ -68,7 +72,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 			permissions.AuthorCreate,
 		),
 		func(c *gin.Context) {
@@ -126,7 +130,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 			permissions.AuthorModify,
 		),
 		func(c *gin.Context) {
@@ -190,7 +194,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 			permissions.AuthorDelete,
 		),
 		func(c *gin.Context) {

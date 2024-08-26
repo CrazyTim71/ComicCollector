@@ -51,6 +51,11 @@ func ValidateRequestBody(requestBody interface{}) error {
 				return errors.New(v.Type().Field(i).Name + " is invalid")
 			}
 			continue
+		case reflect.Int:
+			if field.Int() < 0 {
+				return errors.New(v.Type().Field(i).Name + " is invalid")
+			}
+			continue
 		case reflect.Array: // primitive.ObjectID is an array
 			if fieldType != reflect.TypeOf(primitive.ObjectID{}) {
 				return errors.New(v.Type().Field(i).Name + " is an array of unknown type")
@@ -58,20 +63,36 @@ func ValidateRequestBody(requestBody interface{}) error {
 			if field.Interface().(primitive.ObjectID).IsZero() {
 				return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
 			}
-
-			continue
-		case reflect.Slice: // []primitive.ObjectID is a slice
-			if len(field.Interface().([]primitive.ObjectID)) == 0 {
-				return errors.New(v.Type().Field(i).Name + " is empty")
-			}
-			if fieldType.Elem() != reflect.TypeOf(primitive.ObjectID{}) {
+		case reflect.Slice:
+			if fieldType.Elem() == reflect.TypeOf(primitive.ObjectID{}) {
+				if len(field.Interface().([]primitive.ObjectID)) == 0 {
+					// only check if the field is required in case it is empty
+					if isRequired {
+						return errors.New(v.Type().Field(i).Name + " is empty")
+					} // Skip validation if the field is not required
+					continue
+				}
+				if fieldType.Elem() != reflect.TypeOf(primitive.ObjectID{}) {
+					return errors.New(v.Type().Field(i).Name + " is a slice of unknown type")
+				}
+				if ContainsNilObjectID(field.Interface().([]primitive.ObjectID)) {
+					return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+				}
+			} else if field.Type().Elem().Kind() == reflect.Uint8 { // Check for []byte (slice of bytes)
+				if len(field.Interface().([]byte)) == 0 {
+					return errors.New(v.Type().Field(i).Name + " is empty")
+				}
+			} else {
 				return errors.New(v.Type().Field(i).Name + " is a slice of unknown type")
 			}
-			if ContainsNilObjectID(field.Interface().([]primitive.ObjectID)) {
-				return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+		case reflect.TypeOf(primitive.DateTime(0)).Kind():
+			if field.Interface().(primitive.DateTime) == primitive.DateTime(0) {
+				return errors.New(v.Type().Field(i).Name + " is invalid")
 			}
-			continue
+		// TODO: add case for byte
 		default:
+			log.Println(fieldType.Kind())
+			log.Println(reflect.TypeOf([]byte("")).Kind())
 			panic("unhandled default case")
 		}
 	}
@@ -87,9 +108,32 @@ func CleanEmptyFields(data interface{}) bson.M {
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		fieldName := v.Type().Field(i).Tag.Get("json") // Get the JSON tag name
+		fieldType := field.Type()
 
 		// If there's no json tag, or it's marked to be omitted, skip it
 		if fieldName == "" || fieldName == "-" {
+			continue
+		}
+
+		// Check if the field is a slice and empty. We only add non-empty slices to the result.
+		if fieldType.Kind() == reflect.Slice {
+			if len(field.Interface().([]primitive.ObjectID)) != 0 {
+				result[fieldName] = field.Interface()
+			}
+			continue
+		}
+
+		if fieldType.Kind() == reflect.TypeOf(primitive.DateTime(0)).Kind() {
+			if field.Interface().(primitive.DateTime) != primitive.DateTime(0) {
+				result[fieldName] = field.Interface()
+			}
+			continue
+		}
+
+		if fieldType.Elem().Kind() == reflect.Uint8 { // Check for []byte
+			if len(field.Interface().([]byte)) != 0 {
+				result[fieldName] = field.Interface()
+			}
 			continue
 		}
 

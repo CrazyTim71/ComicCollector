@@ -73,6 +73,11 @@ func PerformFirstRunTasks() error {
 		return err
 	}
 
+	err = createNoDataEntities()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -122,4 +127,84 @@ func createNormalUser() (models.User, error) {
 	log.Println("Please change the password after your first login !!") // TODO: enforce this
 
 	return normalUser, nil
+}
+
+func createNoDataEntities() error {
+	// create funcional entities
+	var NoAuthor models.Author
+	NoAuthor.ID = primitive.NewObjectID()
+	NoAuthor.Name = "No Author"
+	NoAuthor.Description = "This author is used for books without an author"
+	NoAuthor.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	NoAuthor.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+
+	err := operations.InsertAuthor(database.MongoDB, NoAuthor)
+	if err != nil {
+		return err
+	}
+
+	var NoPublisher models.Publisher
+	NoPublisher.ID = primitive.NewObjectID()
+	NoPublisher.Name = "No Publisher"
+	NoPublisher.Description = "This publisher is used for books without a publisher"
+	NoPublisher.Country = "Narnia"
+	NoPublisher.WebsiteURL = "https://narnia.com"
+	NoPublisher.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	NoPublisher.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+
+	err = operations.InsertPublisher(database.MongoDB, NoPublisher)
+	if err != nil {
+		return err
+	}
+
+	var NoLocation models.Location
+	NoLocation.ID = primitive.NewObjectID()
+	NoLocation.Name = "No Location"
+	NoLocation.Description = "This location is used for books without a location"
+	NoLocation.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	NoLocation.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+
+	err = operations.InsertLocation(database.MongoDB, NoLocation)
+	if err != nil {
+		return err
+	}
+
+	var NoOwner models.Owner
+	NoOwner.ID = primitive.NewObjectID()
+	NoOwner.Name = "No Owner"
+	NoOwner.Description = "This owner is used for books without an owner"
+	NoOwner.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	NoOwner.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+
+	err = operations.InsertOwner(database.MongoDB, NoOwner)
+
+	if err != nil {
+		return err
+	}
+
+	var NoBookEdition models.BookEdition
+	NoBookEdition.ID = primitive.NewObjectID()
+	NoBookEdition.Name = "No Edition"
+	NoBookEdition.Description = "This edition is used for books without an edition"
+	NoBookEdition.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	NoBookEdition.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+
+	err = operations.InsertBookEdition(database.MongoDB, NoBookEdition)
+	if err != nil {
+		return err
+	}
+
+	var NoBookType models.BookType
+	NoBookType.ID = primitive.NewObjectID()
+	NoBookType.Name = "No Type"
+	NoBookType.Description = "This type is used for books without a type"
+	NoBookType.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+	NoBookType.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+
+	err = operations.InsertBookType(database.MongoDB, NoBookType)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

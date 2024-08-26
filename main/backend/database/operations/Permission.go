@@ -90,6 +90,21 @@ func CreatePermission(name string, description string) (models.Permission, error
 	return permission, nil
 }
 
+func CheckIfAllPermissionsExist(db *mongo.Database, permissionIds []primitive.ObjectID) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := db.Collection("permission").Find(ctx, bson.M{"_id": bson.M{"$in": permissionIds}})
+	if err != nil {
+		return false
+	}
+
+	var foundRoles []models.Role
+	err = cursor.All(ctx, &foundRoles)
+
+	return len(foundRoles) == len(permissionIds)
+}
+
 func InsertPermission(db *mongo.Database, newPermission models.Permission) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func BookTypeHandler(rg *gin.RouterGroup) {
+func LocationHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
@@ -25,18 +25,18 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			bookTypes, err := operations.GetAllBookTypes(database.MongoDB)
+			locations, err := operations.GetAllLocations(database.MongoDB)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			if bookTypes == nil {
-				bookTypes = []models.BookType{}
+			if locations == nil {
+				locations = []models.Location{}
 			}
 
-			c.JSON(http.StatusOK, bookTypes)
+			c.JSON(http.StatusOK, locations)
 		})
 
 	rg.GET("/:id",
@@ -54,10 +54,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			bookType, err := operations.GetBookTypeById(database.MongoDB, objID)
+			location, err := operations.GetLocationById(database.MongoDB, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
-					c.JSON(http.StatusNotFound, gin.H{"msg": "Book type not found", "error": true})
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Location not found", "error": true})
 					return
 				}
 				log.Println(err)
@@ -65,7 +65,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, bookType)
+			c.JSON(http.StatusOK, location)
 		})
 
 	rg.POST("",
@@ -73,7 +73,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeCreate,
+			permissions.LocationCreate,
 		),
 		func(c *gin.Context) {
 			var requestBody struct {
@@ -96,10 +96,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeByName(database.MongoDB, requestBody.Name)
+			// check if the location already exists
+			_, err = operations.GetLocationByName(database.MongoDB, requestBody.Name)
 			if err == nil {
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type already exists", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Location already exists", "error": true})
 				return
 			} else if !errors.Is(err, mongo.ErrNoDocuments) {
 				// handle all other database errors, but ignore the NoDocuments error
@@ -109,21 +109,21 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			var newBookType models.BookType
-			newBookType.ID = primitive.NewObjectID()
-			newBookType.Name = requestBody.Name
-			newBookType.Description = requestBody.Description
-			newBookType.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newBookType.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			var newLocation models.Location
+			newLocation.ID = primitive.NewObjectID()
+			newLocation.Name = requestBody.Name
+			newLocation.Description = requestBody.Description
+			newLocation.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newLocation.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-			err = operations.InsertBookType(database.MongoDB, newBookType)
+			err = operations.InsertLocation(database.MongoDB, newLocation)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, newBookType)
+			c.JSON(http.StatusOK, newLocation)
 		})
 
 	rg.PATCH("/:id",
@@ -131,7 +131,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookEditionModify,
+			permissions.LocationModify,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -168,16 +168,16 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the location already exists
+			_, err = operations.GetLocationById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Location not found", "error": true})
 				return
 			}
 
-			// update the book type
-			result, err := operations.UpdateBookType(database.MongoDB, objID, updateData)
+			// update the location
+			result, err := operations.UpdateLocation(database.MongoDB, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -188,7 +188,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was updated successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Location was updated successfully"})
 		})
 
 	rg.DELETE("/:id",
@@ -196,7 +196,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeDelete,
+			permissions.LocationDelete,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -207,22 +207,22 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the location exists
+			_, err = operations.GetLocationById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type doesn't exist", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Location not found", "error": true})
 				return
 			}
 
-			// delete the book type
-			_, err = operations.DeleteBookType(database.MongoDB, objID)
+			// delete the location
+			_, err = operations.DeleteLocation(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was deleted successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Location was deleted successfully"})
 		})
 }

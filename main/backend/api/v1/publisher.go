@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func BookTypeHandler(rg *gin.RouterGroup) {
+func PublisherHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
@@ -25,18 +25,18 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			bookTypes, err := operations.GetAllBookTypes(database.MongoDB)
+			publishers, err := operations.GetAllPublishers(database.MongoDB)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			if bookTypes == nil {
-				bookTypes = []models.BookType{}
+			if publishers == nil {
+				publishers = []models.Publisher{}
 			}
 
-			c.JSON(http.StatusOK, bookTypes)
+			c.JSON(http.StatusOK, publishers)
 		})
 
 	rg.GET("/:id",
@@ -54,10 +54,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			bookType, err := operations.GetBookTypeById(database.MongoDB, objID)
+			publisher, err := operations.GetPublisherById(database.MongoDB, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
-					c.JSON(http.StatusNotFound, gin.H{"msg": "Book type not found", "error": true})
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Publisher not found", "error": true})
 					return
 				}
 				log.Println(err)
@@ -65,7 +65,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, bookType)
+			c.JSON(http.StatusOK, publisher)
 		})
 
 	rg.POST("",
@@ -73,12 +73,14 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeCreate,
+			permissions.PublisherCreate,
 		),
 		func(c *gin.Context) {
 			var requestBody struct {
 				Name        string `json:"name" binding:"required"`
 				Description string `json:"description" binding:"required"`
+				WebsiteURL  string `json:"website_url" binding:"required"`
+				Country     string `json:"country" binding:"required"`
 			}
 
 			err := c.ShouldBindJSON(&requestBody)
@@ -96,10 +98,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeByName(database.MongoDB, requestBody.Name)
+			// check if the publisher already exists
+			_, err = operations.GetPublisherByName(database.MongoDB, requestBody.Name)
 			if err == nil {
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type already exists", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Publisher already exists", "error": true})
 				return
 			} else if !errors.Is(err, mongo.ErrNoDocuments) {
 				// handle all other database errors, but ignore the NoDocuments error
@@ -109,21 +111,23 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			var newBookType models.BookType
-			newBookType.ID = primitive.NewObjectID()
-			newBookType.Name = requestBody.Name
-			newBookType.Description = requestBody.Description
-			newBookType.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newBookType.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			var newPublisher models.Publisher
+			newPublisher.ID = primitive.NewObjectID()
+			newPublisher.Name = requestBody.Name
+			newPublisher.Description = requestBody.Description
+			newPublisher.WebsiteURL = requestBody.WebsiteURL
+			newPublisher.Country = requestBody.Country
+			newPublisher.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newPublisher.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-			err = operations.InsertBookType(database.MongoDB, newBookType)
+			err = operations.InsertPublisher(database.MongoDB, newPublisher)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, newBookType)
+			c.JSON(http.StatusOK, newPublisher)
 		})
 
 	rg.PATCH("/:id",
@@ -131,7 +135,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookEditionModify,
+			permissions.PublisherModify,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -145,6 +149,8 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 			var requestBody struct {
 				Name        string `json:"name"`
 				Description string `json:"description"`
+				WebsiteURL  string `json:"website_url"`
+				Country     string `json:"country"`
 			}
 
 			if err := c.ShouldBindJSON(&requestBody); err != nil {
@@ -168,16 +174,16 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the publisher already exists
+			_, err = operations.GetPublisherById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Publisher not found", "error": true})
 				return
 			}
 
-			// update the book type
-			result, err := operations.UpdateBookType(database.MongoDB, objID, updateData)
+			// update the publisher
+			result, err := operations.UpdatePublisher(database.MongoDB, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -188,7 +194,8 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was updated successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Publisher was updated successfully"})
+
 		})
 
 	rg.DELETE("/:id",
@@ -196,7 +203,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeDelete,
+			permissions.PublisherDelete,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -207,22 +214,22 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the publisher exists
+			_, err = operations.GetPublisherById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type doesn't exist", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Publisher not found", "error": true})
 				return
 			}
 
-			// delete the book type
-			_, err = operations.DeleteBookType(database.MongoDB, objID)
+			// delete the publisher
+			_, err = operations.DeletePublisher(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was deleted successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Publisher was deleted successfully"})
 		})
 }

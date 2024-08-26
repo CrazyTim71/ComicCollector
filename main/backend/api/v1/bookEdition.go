@@ -22,7 +22,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
 			bookEditions, err := operations.GetAllBookEditions(database.MongoDB)
@@ -43,7 +43,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -56,6 +56,10 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 
 			bookEdition, err := operations.GetBookEditionById(database.MongoDB, objID)
 			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Book edition not found", "error": true})
+					return
+				}
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
@@ -68,7 +72,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 			permissions.BookEditionCreate,
 		),
 		func(c *gin.Context) {
@@ -126,7 +130,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 			permissions.BookEditionModify,
 		),
 		func(c *gin.Context) {
@@ -191,7 +195,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 			permissions.BookEditionDelete,
 		),
 		func(c *gin.Context) {
@@ -218,6 +222,6 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book edition deleted", "error": false})
+			c.JSON(http.StatusOK, gin.H{"msg": "Book edition was deleted successfully"})
 		})
 }

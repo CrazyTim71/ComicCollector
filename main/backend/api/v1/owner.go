@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func BookTypeHandler(rg *gin.RouterGroup) {
+func OwnerHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
@@ -25,18 +25,18 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			bookTypes, err := operations.GetAllBookTypes(database.MongoDB)
+			owners, err := operations.GetAllOwners(database.MongoDB)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			if bookTypes == nil {
-				bookTypes = []models.BookType{}
+			if owners == nil {
+				owners = []models.Owner{}
 			}
 
-			c.JSON(http.StatusOK, bookTypes)
+			c.JSON(http.StatusOK, owners)
 		})
 
 	rg.GET("/:id",
@@ -54,10 +54,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			bookType, err := operations.GetBookTypeById(database.MongoDB, objID)
+			owner, err := operations.GetOwnerById(database.MongoDB, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
-					c.JSON(http.StatusNotFound, gin.H{"msg": "Book type not found", "error": true})
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Owner not found", "error": true})
 					return
 				}
 				log.Println(err)
@@ -65,7 +65,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, bookType)
+			c.JSON(http.StatusOK, owner)
 		})
 
 	rg.POST("",
@@ -73,7 +73,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeCreate,
+			permissions.OwnerCreate,
 		),
 		func(c *gin.Context) {
 			var requestBody struct {
@@ -96,10 +96,10 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeByName(database.MongoDB, requestBody.Name)
+			// check if the owner already exists
+			_, err = operations.GetOwnerByName(database.MongoDB, requestBody.Name)
 			if err == nil {
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type already exists", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Owner already exists", "error": true})
 				return
 			} else if !errors.Is(err, mongo.ErrNoDocuments) {
 				// handle all other database errors, but ignore the NoDocuments error
@@ -109,21 +109,21 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			var newBookType models.BookType
-			newBookType.ID = primitive.NewObjectID()
-			newBookType.Name = requestBody.Name
-			newBookType.Description = requestBody.Description
-			newBookType.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newBookType.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			var newOwner models.Owner
+			newOwner.ID = primitive.NewObjectID()
+			newOwner.Name = requestBody.Name
+			newOwner.Description = requestBody.Description
+			newOwner.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newOwner.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-			err = operations.InsertBookType(database.MongoDB, newBookType)
+			err = operations.InsertOwner(database.MongoDB, newOwner)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, newBookType)
+			c.JSON(http.StatusCreated, newOwner)
 		})
 
 	rg.PATCH("/:id",
@@ -131,7 +131,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookEditionModify,
+			permissions.OwnerModify,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -168,16 +168,16 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type already exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the owner already exists
+			_, err = operations.GetOwnerById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Owner not found", "error": true})
 				return
 			}
 
-			// update the book type
-			result, err := operations.UpdateBookType(database.MongoDB, objID, updateData)
+			// update the owner
+			result, err := operations.UpdateOwner(database.MongoDB, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -188,7 +188,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was updated successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Owner was updated successfully"})
 		})
 
 	rg.DELETE("/:id",
@@ -196,7 +196,7 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
-			permissions.BookTypeDelete,
+			permissions.OwnerDelete,
 		),
 		func(c *gin.Context) {
 			id := c.Param("id")
@@ -207,22 +207,22 @@ func BookTypeHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// check if the book type exists
-			_, err = operations.GetBookTypeById(database.MongoDB, objID)
+			// check if the owner exists
+			_, err = operations.GetOwnerById(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book type doesn't exist", "error": true})
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Owner not found", "error": true})
 				return
 			}
 
-			// delete the book type
-			_, err = operations.DeleteBookType(database.MongoDB, objID)
+			// delete the owner
+			_, err = operations.DeleteOwner(database.MongoDB, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
 
-			c.JSON(http.StatusOK, gin.H{"msg": "Book type was deleted successfully"})
+			c.JSON(http.StatusOK, gin.H{"msg": "Owner was deleted successfully"})
 		})
 }

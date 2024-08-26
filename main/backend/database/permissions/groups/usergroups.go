@@ -22,7 +22,7 @@ var (
 		Description: "Full access to all features",
 		Permissions: []permissions.Permission{
 			//global stuff
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 
 			// user stuff
 			permissions.UserViewAll,
@@ -54,6 +54,26 @@ var (
 			permissions.LocationCreate,
 			permissions.LocationModify,
 			permissions.LocationDelete,
+
+			// owner stuff
+			permissions.OwnerCreate,
+			permissions.OwnerModify,
+			permissions.OwnerDelete,
+
+			// permission stuff
+			permissions.PermissionCreate,
+			permissions.PermissionModify,
+			permissions.PermissionDelete,
+
+			// publisher stuff
+			permissions.PublisherCreate,
+			permissions.PublisherModify,
+			permissions.PublisherDelete,
+
+			// role stuff
+			permissions.RoleCreate,
+			permissions.RoleModify,
+			permissions.RoleDelete,
 		},
 	}
 
@@ -62,7 +82,7 @@ var (
 		Description: "Basic access to all features",
 		Permissions: []permissions.Permission{
 			//global stuff
-			permissions.GlobalEnableEndpointAccess,
+			permissions.BasicApiAccess,
 
 			// user stuff
 			permissions.UserViewSelf,
@@ -70,6 +90,7 @@ var (
 			permissions.UserDeleteSelf,
 
 			// book stuff
+			// no permissions yet
 
 			// author stuff
 			permissions.AuthorCreate,
@@ -82,6 +103,18 @@ var (
 
 			// location stuff
 			permissions.LocationCreate,
+
+			// owner stuff
+			permissions.OwnerCreate,
+
+			// permission stuff
+			// no permissions yet
+
+			// publisher stuff
+			permissions.PublisherCreate,
+
+			// role stuff
+			// no permissions yet
 		},
 	}
 

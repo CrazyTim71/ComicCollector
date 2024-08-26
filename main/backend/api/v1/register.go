@@ -103,7 +103,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 			restrictedUserPermissionIds = append(restrictedUserPermissionIds, perm.ID)
 		}
 
-		// create the roles
+		// create the roles in case they don't exist
 		restrictedUserRole, err := operations.CreateRole(
 			database.MongoDB,
 			groups.RestrictedUser.Name,

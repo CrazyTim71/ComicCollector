@@ -4,6 +4,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
@@ -23,7 +24,7 @@ func GetAllOwners(db *mongo.Database) ([]models.Owner, error) {
 	return owners, err
 }
 
-func GetOwnerById(db *mongo.Database, id string) (models.Owner, error) {
+func GetOwnerById(db *mongo.Database, id primitive.ObjectID) (models.Owner, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -52,7 +53,7 @@ func InsertOwner(db *mongo.Database, owner models.Owner) error {
 	return err
 }
 
-func UpdateOwner(db *mongo.Database, id string, data bson.M) (*mongo.UpdateResult, error) {
+func UpdateOwner(db *mongo.Database, id primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -61,7 +62,7 @@ func UpdateOwner(db *mongo.Database, id string, data bson.M) (*mongo.UpdateResul
 	return result, err
 }
 
-func DeleteOwner(db *mongo.Database, id string) (*mongo.DeleteResult, error) {
+func DeleteOwner(db *mongo.Database, id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
