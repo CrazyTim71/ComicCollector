@@ -173,6 +173,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 			// check if the publisher already exists
 			_, err = operations.GetPublisherById(database.MongoDB, objID)

@@ -171,6 +171,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 			// check if the permission already exists
 			_, err = operations.GetPermissionById(database.MongoDB, objID)

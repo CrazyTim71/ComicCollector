@@ -8,15 +8,12 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
-	"ComicCollector/main/backend/utils/env"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"io"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -81,22 +78,22 @@ func BookHandler(rg *gin.RouterGroup) {
 		),
 		func(c *gin.Context) {
 			var requestBody struct {
-				Title       string               `form:"title" binding:"required"`
-				Number      int                  `form:"number" binding:"required"`
-				ReleaseDate primitive.DateTime   `form:"release_date" binding:"required"`
-				CoverImage  []byte               `form:"cover_image" binding:"required"`
-				Description string               `form:"description" binding:"required"`
-				Notes       string               `form:"notes" binding:"required"`
-				Authors     []primitive.ObjectID `form:"authors" binding:"required"`
-				Publishers  []primitive.ObjectID `form:"publishers" binding:"required"`
-				Locations   []primitive.ObjectID `form:"locations" binding:"required"`
-				Owners      []primitive.ObjectID `form:"owners" binding:"required"`
-				BookType    primitive.ObjectID   `form:"book_type" binding:"required"`
-				BookEdition primitive.ObjectID   `form:"book_edition" binding:"required"`
-				Printing    string               `form:"printing" binding:"required"`
-				ISBN        string               `form:"isbn" binding:"required"`
-				Price       string               `form:"price" binding:"required"`
-				Count       int                  `form:"count" binding:"required"`
+				Title       string `json:"title" binding:"required"`
+				Number      int    `json:"number" binding:"required"`
+				ReleaseDate string `json:"release_date" binding:"required"`
+				//CoverImage  *multipart.FileHeader `form:"cover_image" binding:"required"`
+				Description string               `json:"description"`
+				Notes       string               `json:"notes"`
+				Authors     []primitive.ObjectID `json:"authors"`
+				Publishers  []primitive.ObjectID `json:"publishers"`
+				Locations   []primitive.ObjectID `json:"locations"`
+				Owners      []primitive.ObjectID `json:"owners" binding:"required"`
+				BookType    primitive.ObjectID   `json:"book_type" binding:"required"`
+				BookEdition primitive.ObjectID   `json:"book_edition" binding:"required"`
+				Printing    string               `json:"printing"`
+				ISBN        string               `json:"isbn"`
+				Price       string               `json:"price"`
+				Count       int                  `json:"count"`
 			}
 
 			// TODO: handle the CoverImage file upload
@@ -108,75 +105,23 @@ func BookHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			date, err := time.Parse(time.DateOnly, requestBody.ReleaseDate) // Format must match the date string in the frontend
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
+				return
+			}
+			releaseDate := utils.ConvertToDateTime(time.DateOnly, date)
+
 			// validate the user input
-			err := utils.ValidateRequestBody(requestBody)
+			err = utils.ValidateRequestBody(requestBody)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
 				return
 			}
 
-			// Handle the CoverImage file upload
-			imageFile, header, err := c.Request.FormFile("cover_image")
-			if err != nil {
-				log.Println(err)
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "The cover image is required", "error": true})
-				return
-			}
-
-			// Check the file extension
-			if !strings.HasSuffix(header.Filename, ".png") && !strings.HasSuffix(header.Filename, ".jpg") {
-				log.Println("Invalid file extension")
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid file", "error": true})
-				return
-			}
-
-			// Check the file size
-			size, err := imageFile.Seek(0, io.SeekEnd)
-			if err != nil {
-				log.Println("Error: Unable to determine file size")
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Invalid file", "error": true})
-				return
-			}
-			// Reset the read pointer to the start of the file
-			_, _ = imageFile.Seek(0, io.SeekStart)
-
-			if size > int64(env.MaxImageFileSize) {
-				log.Println("Error: File size exceeds the limit")
-				c.JSON(http.StatusBadRequest, gin.H{"msg": "File size exceeds limit of \" + fmt.Sprint(env.MaxImageFileSize>>20) + \" MiB", "error": true})
-				return
-			}
-
-			//// create upload folder if it doesn't exist
-			//uploadDir := "./uploads"
-			//if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-			//	if err := os.Mkdir(uploadDir, os.ModePerm); err != nil {
-			//		log.Println(err)
-			//		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Unable to save the file", "error": true})
-			//		return
-			//	}
-			//}
-			//
-			//// create a unique filename
-			//uniqueFilename := strconv.FormatInt(time.Now().Unix(), 10) + "_" + filepath.Ext(header.Filename)
-			//filePath := filepath.Join(uploadDir, uniqueFilename)
-			//
-			//// save file to disk into the temp folder
-			//if err := c.SaveUploadedFile(header, filePath); err != nil {
-			//	log.Println(err)
-			//	c.JSON(http.StatusInternalServerError, gin.H{"msg": "Unable to save file", "error": true})
-			//	return
-			//}
-
-			imageData, err := io.ReadAll(imageFile)
-			if err != nil {
-				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Failed to read cover image", "error": true})
-				return
-			}
-
 			// check if the book already exists
-			_, err = operations.GetBookByName(database.MongoDB, requestBody.Title)
+			_, err = operations.GetBookByTitle(database.MongoDB, requestBody.Title)
 			if err == nil { // err == nil in case the book already exists
 				log.Println(err)
 				c.JSON(http.StatusConflict, gin.H{"msg": "This book already exists", "error": true})
@@ -189,12 +134,13 @@ func BookHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			// TODO: check if the BookType, BookEdition, Author, Publisher, Location and Owner are valid with operations.CheckIfExists()
 			var newBook models.Book
 			newBook.ID = primitive.NewObjectID()
 			newBook.Title = requestBody.Title
 			newBook.Number = requestBody.Number
-			newBook.ReleaseDate = requestBody.ReleaseDate
-			newBook.CoverImage = imageData
+			newBook.ReleaseDate = releaseDate
+			newBook.CoverImage = primitive.NilObjectID // the cover image will be uploaded separately
 			newBook.Description = requestBody.Description
 			newBook.Notes = requestBody.Notes
 			newBook.Authors = requestBody.Authors

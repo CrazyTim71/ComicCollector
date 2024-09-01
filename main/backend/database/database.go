@@ -5,12 +5,14 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"time"
 )
 
 var MongoDB *mongo.Database
+var CoverBucket *gridfs.Bucket
 
 func InitDatabase() bool {
 	uri := env.GetDatabaseURI()
@@ -31,6 +33,13 @@ func InitDatabase() bool {
 		log.Fatal("The 'MONGODB_DBNAME' environmental variable is not set.")
 	}
 	MongoDB = client.Database(dbName)
+
+	opt := options.GridFSBucket()
+	opt.SetName("covers")
+	CoverBucket, err = gridfs.NewBucket(MongoDB, opt)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return true
 }

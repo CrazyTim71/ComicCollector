@@ -47,4 +47,7 @@ func ApiHandler(rg *gin.RouterGroup) {
 	role := rg.Group("/role")
 	RoleHandler(role)
 
+	image := rg.Group("/image")
+	ImageHandler(image)
+
 }

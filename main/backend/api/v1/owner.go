@@ -167,6 +167,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 			// check if the owner already exists
 			_, err = operations.GetOwnerById(database.MongoDB, objID)

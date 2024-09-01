@@ -167,6 +167,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 			// check if the location already exists
 			_, err = operations.GetLocationById(database.MongoDB, objID)

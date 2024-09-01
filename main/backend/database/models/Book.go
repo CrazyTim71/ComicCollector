@@ -1,13 +1,15 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Book struct {
 	ID          primitive.ObjectID   `json:"id" bson:"_id"`
 	Title       string               `json:"title" bson:"title"`
 	Number      int                  `json:"number" bson:"number"`
 	ReleaseDate primitive.DateTime   `json:"release_date" bson:"release_date"`
-	CoverImage  []byte               `json:"cover_image" bson:"cover_image"`
+	CoverImage  primitive.ObjectID   `json:"cover_image" bson:"cover_image"` // GridFS Id
 	Description string               `json:"description" bson:"description"`
 	Notes       string               `json:"notes" bson:"notes"`
 	Authors     []primitive.ObjectID `json:"authors" bson:"authors"`

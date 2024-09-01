@@ -74,6 +74,10 @@ var (
 			permissions.RoleCreate,
 			permissions.RoleModify,
 			permissions.RoleDelete,
+
+			// cover stuff
+			permissions.CoverUpload,
+			permissions.CoverDelete,
 		},
 	}
 
@@ -115,6 +119,9 @@ var (
 
 			// role stuff
 			// no permissions yet
+
+			// cover stuff
+			permissions.CoverUpload,
 		},
 	}
 

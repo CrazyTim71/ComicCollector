@@ -149,6 +149,21 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 	})
 
+	r.GET("/bookmanager", middleware.CheckJwtToken(), func(c *gin.Context) {
+		templateSite := template.Must(
+			template.ParseFS(
+				env.Files,
+				"main/frontend/public/bookmanager/index.gohtml",
+				"main/frontend/templates/base.gohtml"))
+
+		err := templateSite.Execute(c.Writer, nil)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
+			return
+		}
+	})
+
 	r.GET("/logout", func(c *gin.Context) {
 		c.SetCookie("auth_token", "", -1, "/", "", false, false)
 		c.Redirect(http.StatusTemporaryRedirect, "/")

@@ -179,3 +179,14 @@ var (
 		Description: "Allows deleting a role",
 	}
 )
+
+var (
+	CoverUpload = Permission{
+		Name:        "cover:upload",
+		Description: "Allows uploading a cover image",
+	}
+	CoverDelete = Permission{
+		Name:        "cover:delete",
+		Description: "Allows deleting a cover image",
+	}
+)

@@ -34,12 +34,22 @@ func GetBookById(db *mongo.Database, id primitive.ObjectID) (models.Book, error)
 	return book, err
 }
 
-func GetBookByName(db *mongo.Database, name string) (models.Book, error) {
+func GetBookByTitle(db *mongo.Database, title string) (models.Book, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	var book models.Book
-	err := db.Collection("book").FindOne(ctx, bson.M{"name": name}).Decode(&book)
+	err := db.Collection("book").FindOne(ctx, bson.M{"title": title}).Decode(&book)
+
+	return book, err
+}
+
+func GetBookByCoverImage(db *mongo.Database, coverImage primitive.ObjectID) (models.Book, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var book models.Book
+	err := db.Collection("book").FindOne(ctx, bson.M{"cover_image": coverImage}).Decode(&book)
 
 	return book, err
 }

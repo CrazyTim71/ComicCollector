@@ -50,12 +50,11 @@ func ValidateRequestBody(requestBody interface{}) error {
 				log.Println(err)
 				return errors.New(v.Type().Field(i).Name + " is invalid")
 			}
-			continue
 		case reflect.Int:
 			if field.Int() < 0 {
 				return errors.New(v.Type().Field(i).Name + " is invalid")
 			}
-			continue
+
 		case reflect.Array: // primitive.ObjectID is an array
 			if fieldType != reflect.TypeOf(primitive.ObjectID{}) {
 				return errors.New(v.Type().Field(i).Name + " is an array of unknown type")
