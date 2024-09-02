@@ -61,7 +61,7 @@
 
                             <div class="col-md-6">
                                 <label for="cover_image" class="form-label">Cover Image:</label>
-                                <input type="file" id="cover_image" class="form-control" @change="handleFileUpload" required />
+                                <input type="file" id="cover_image" class="form-control" accept=".jpg, .jpeg, .png" @change="handleFileUpload" required />
                                 <div class="text-danger">${ errors.coverImage }</div>
                             </div>
 

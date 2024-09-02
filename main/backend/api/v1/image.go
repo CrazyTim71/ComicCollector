@@ -22,6 +22,26 @@ import (
 	"time"
 )
 
+// image formats and magic numbers
+var magicTable = map[string]string{
+	"\xff\xd8\xff":      "image/jpeg",
+	"\x89PNG\r\n\x1a\n": "image/png",
+	"GIF87a":            "image/gif",
+	"GIF89a":            "image/gif",
+}
+
+// https://stackoverflow.com/questions/25959386/how-to-check-if-a-file-is-a-valid-image
+func mimeFromIncipit(incipit []byte) string {
+    incipitStr := []byte(incipit)
+    for magic, mime := range magicTable {
+        if strings.HasPrefix(incipitStr, magic) {
+            return mime
+        }
+    }
+
+    return ""
+}
+
 func ImageHandler(rg *gin.RouterGroup) {
 	rg.GET("/cover/:id",
 		middleware.CheckJwtToken(),
@@ -90,7 +110,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 			}
 
 			// Check the file extension
-			if !strings.HasSuffix(header.Filename, ".png") && !strings.HasSuffix(header.Filename, ".jpg") {
+			if !strings.HasSuffix(header.Filename, ".png") && !strings.HasSuffix(header.Filename, ".jpg") && !strings.HasSuffix(header.Filename, ".jpeg") {
 				log.Println("Invalid file extension")
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid file", "error": true})
 				return
@@ -109,6 +129,14 @@ func ImageHandler(rg *gin.RouterGroup) {
 			if size > int64(env.MaxImageFileSize) {
 				log.Println("Error: File size exceeds the limit")
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "File size exceeds limit of \" + fmt.Sprint(env.MaxImageFileSize>>20) + \" MiB", "error": true})
+				return
+			}
+			
+			// Check the file type
+			fileType := mimeFromIncipit([]byte(header.Filename))
+			if fileType != "image/jpeg" && fileType != "image/png" {
+				log.Println("Error: Invalid file type")
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid file type", "error": true})
 				return
 			}
 
