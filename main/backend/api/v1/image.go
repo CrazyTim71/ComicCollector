@@ -32,14 +32,14 @@ var magicTable = map[string]string{
 
 // https://stackoverflow.com/questions/25959386/how-to-check-if-a-file-is-a-valid-image
 func mimeFromIncipit(incipit []byte) string {
-    incipitStr := []byte(incipit)
-    for magic, mime := range magicTable {
-        if strings.HasPrefix(incipitStr, magic) {
-            return mime
-        }
-    }
+	incipitStr := string(incipit)
+	for magic, mime := range magicTable {
+		if strings.HasPrefix(incipitStr, magic) {
+			return mime
+		}
+	}
 
-    return ""
+	return ""
 }
 
 func ImageHandler(rg *gin.RouterGroup) {
@@ -131,9 +131,20 @@ func ImageHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "File size exceeds limit of \" + fmt.Sprint(env.MaxImageFileSize>>20) + \" MiB", "error": true})
 				return
 			}
-			
+
+			// Read the first few bytes of the file to determine its type
+			incipit := make([]byte, 8) // Read enough bytes to cover all magic numbers
+			_, err = imageFile.Read(incipit)
+			if err != nil {
+				log.Println("Error: Unable to read file header")
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Invalid file", "error": true})
+				return
+			}
+			// Reset the read pointer again to the start of the file
+			_, _ = imageFile.Seek(0, io.SeekStart)
+
 			// Check the file type
-			fileType := mimeFromIncipit([]byte(header.Filename))
+			fileType := mimeFromIncipit(incipit)
 			if fileType != "image/jpeg" && fileType != "image/png" {
 				log.Println("Error: Invalid file type")
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid file type", "error": true})
