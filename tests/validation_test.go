@@ -16,13 +16,13 @@ func TestRequestBodyStrings(t *testing.T) {
 	requestBody.Name = "test"
 	requestBody.Description = "hehe :P"
 
-	err := utils.ValidateRequestBody(requestBody)
+	err := utils.ValidateRequestBody(requestBody, false)
 	if err != nil {
 		t.Error("Expected no error, but got:", err)
 	}
 
 	requestBody.Name = ""
-	err = utils.ValidateRequestBody(requestBody)
+	err = utils.ValidateRequestBody(requestBody, false)
 	if err == nil {
 		t.Error(err)
 	}
@@ -35,7 +35,7 @@ func TestRequestBodyStrings(t *testing.T) {
 	requestBody2.Name = ""
 	requestBody2.Description = ""
 
-	err = utils.ValidateRequestBody(requestBody2)
+	err = utils.ValidateRequestBody(requestBody2, false)
 	if err != nil {
 		t.Error("Expected no error, but got:", err)
 	}
@@ -57,7 +57,7 @@ func TestRequestBodyObjectIds(t *testing.T) {
 	requestBody.NilId = primitive.NewObjectID()
 	requestBody.IdArray = []primitive.ObjectID{primitive.NewObjectID(), primitive.NewObjectID()}
 
-	err := utils.ValidateRequestBody(requestBody)
+	err := utils.ValidateRequestBody(requestBody, false)
 	if err != nil {
 		t.Error("Expected no error, but got:", err)
 	}
@@ -66,7 +66,7 @@ func TestRequestBodyObjectIds(t *testing.T) {
 	requestBody.NilId = primitive.NilObjectID                                                  // This is invalid
 	requestBody.IdArray = []primitive.ObjectID{primitive.NewObjectID(), primitive.NilObjectID} // This is invalid
 
-	err = utils.ValidateRequestBody(requestBody)
+	err = utils.ValidateRequestBody(requestBody, false)
 	if err == nil {
 		t.Error(err)
 	}
@@ -78,7 +78,7 @@ func TestRequestBodyObjectIds(t *testing.T) {
 	requestBody.NilId = primitive.NewObjectID()
 	requestBody.IdArray = []primitive.ObjectID{primitive.NewObjectID(), primitive.NilObjectID} // This is invalid
 
-	err = utils.ValidateRequestBody(requestBody)
+	err = utils.ValidateRequestBody(requestBody, false)
 	if err == nil {
 		t.Error(err)
 	}
@@ -97,7 +97,7 @@ func TestRequestBodyObjectIds(t *testing.T) {
 	requestBody2.NilId = primitive.NewObjectID()
 	requestBody2.IdArray = []primitive.ObjectID{primitive.NewObjectID(), primitive.NewObjectID()}
 
-	err = utils.ValidateRequestBody(requestBody2)
+	err = utils.ValidateRequestBody(requestBody2, false)
 	if err != nil {
 		t.Error("Expected no error, but got:", err)
 	}
@@ -114,13 +114,13 @@ func TestRequestBodyInts(t *testing.T) {
 	requestBody.Description = "hehe :P"
 	requestBody.Age = 20
 
-	err := utils.ValidateRequestBody(requestBody)
+	err := utils.ValidateRequestBody(requestBody, false)
 	if err != nil {
 		t.Error("Expected no error, but got:", err)
 	}
 
 	requestBody.Age = -1
-	err = utils.ValidateRequestBody(requestBody)
+	err = utils.ValidateRequestBody(requestBody, false)
 	if err == nil {
 		t.Error(err)
 	}
@@ -139,13 +139,13 @@ func TestRequestBodyDateTime(t *testing.T) {
 	requestBody.Age = 20
 	requestBody.BirthDate = primitive.NewDateTimeFromTime(time.Now())
 
-	err := utils.ValidateRequestBody(requestBody)
+	err := utils.ValidateRequestBody(requestBody, false)
 	if err != nil {
 		t.Error("Expected no error, but got:", err)
 	}
 
 	requestBody.BirthDate = primitive.DateTime(0)
-	err = utils.ValidateRequestBody(requestBody)
+	err = utils.ValidateRequestBody(requestBody, false)
 	if err == nil {
 		t.Error(err)
 	}
@@ -181,19 +181,19 @@ func TestRequestBodyBytes(t *testing.T) {
 	requestBody.Age = 20
 	requestBody.Bytes = []byte("test")
 
-	err := utils.ValidateRequestBody(requestBody)
+	err := utils.ValidateRequestBody(requestBody, false)
 	if err != nil {
 		t.Error("Expected no error, but got:", err)
 	}
 
 	requestBody.Bytes = nil
-	err = utils.ValidateRequestBody(requestBody)
+	err = utils.ValidateRequestBody(requestBody, false)
 	if err == nil {
 		t.Error(err)
 	}
 
 	requestBody.Bytes = []byte("")
-	err = utils.ValidateRequestBody(requestBody)
+	err = utils.ValidateRequestBody(requestBody, false)
 	if err == nil {
 		t.Error(err)
 	}

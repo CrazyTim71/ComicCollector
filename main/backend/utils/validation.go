@@ -21,7 +21,7 @@ func ContainsNilObjectID(array []primitive.ObjectID) bool {
 	return false
 }
 
-func ValidateRequestBody(requestBody interface{}) error {
+func ValidateRequestBody(requestBody interface{}, checkObjectIdsForExistence bool) error {
 	if requestBody == nil {
 		return errors.New("request body cannot be nil")
 	}
@@ -65,29 +65,30 @@ func ValidateRequestBody(requestBody interface{}) error {
 			if field.Interface().(primitive.ObjectID).IsZero() {
 				return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
 			}
+			if checkObjectIdsForExistence {
+				// check if the objectID is valid
+				var modelType string
+				switch v.Type().Field(i).Name {
+				case "BookType":
+					modelType = "BookType"
+				case "BookEdition":
+					modelType = "BookEdition"
+				case "Owners":
+					modelType = "Owner"
+				case "Locations":
+					modelType = "Location"
+				case "Publishers":
+					modelType = "Publisher"
+				case "Authors":
+					modelType = "Author"
+				default:
+					return errors.New("unknown model type")
+				}
+				fmt.Print(modelType)
 
-			// check if the objectID is valid
-			var modelType string
-			switch v.Type().Field(i).Name {
-			case "BookType":
-				modelType = "BookType"
-			case "BookEdition":
-				modelType = "BookEdition"
-			case "Owners":
-				modelType = "Owner"
-			case "Locations":
-				modelType = "Location"
-			case "Publishers":
-				modelType = "Publisher"
-			case "Authors":
-				modelType = "Author"
-			default:
-				return errors.New("unknown model type")
-			}
-			fmt.Print(modelType)
-
-			if !operations.CheckIfExists(database.MongoDB, modelType, bson.M{"_id": field.Interface().(primitive.ObjectID)}) {
-				return errors.New(v.Type().Field(i).Name + " does not exist")
+				if !operations.CheckIfExists(database.MongoDB, modelType, bson.M{"_id": field.Interface().(primitive.ObjectID)}) {
+					return errors.New(v.Type().Field(i).Name + " does not exist")
+				}
 			}
 
 		case reflect.Slice:

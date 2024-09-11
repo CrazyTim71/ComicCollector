@@ -93,7 +93,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			}
 
 			// validate the user input
-			err = utils.ValidateRequestBody(requestBody)
+			err = utils.ValidateRequestBody(requestBody, true)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
@@ -166,7 +166,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			}
 
 			// validate the user input
-			err = utils.ValidateRequestBody(requestBody)
+			err = utils.ValidateRequestBody(requestBody, true)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
