@@ -8,6 +8,7 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -41,7 +42,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 
 	rg.GET("/:id",
 		middleware.CheckJwtToken(),
-		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
+		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
@@ -109,12 +110,19 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+
 			var newBookEdition models.BookEdition
 			newBookEdition.ID = primitive.NewObjectID()
 			newBookEdition.Name = requestBody.Name
 			newBookEdition.Description = requestBody.Description
 			newBookEdition.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newBookEdition.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newBookEdition.CreatedBy = currentUser
 
 			err = operations.InsertBookEdition(database.MongoDB, newBookEdition)
 			if err != nil {
@@ -167,7 +175,15 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
 			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
+			updateData["updated_by"] = currentUser
 
 			// check if the book edition already exists
 			_, err = operations.GetBookEditionById(database.MongoDB, objID)

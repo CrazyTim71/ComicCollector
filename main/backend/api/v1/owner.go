@@ -8,6 +8,7 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -109,12 +110,19 @@ func OwnerHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+
 			var newOwner models.Owner
 			newOwner.ID = primitive.NewObjectID()
 			newOwner.Name = requestBody.Name
 			newOwner.Description = requestBody.Description
 			newOwner.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newOwner.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newOwner.CreatedBy = currentUser
 
 			err = operations.InsertOwner(database.MongoDB, newOwner)
 			if err != nil {
@@ -167,7 +175,15 @@ func OwnerHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
 			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
+			updateData["updated_by"] = currentUser
 
 			// check if the owner already exists
 			_, err = operations.GetOwnerById(database.MongoDB, objID)

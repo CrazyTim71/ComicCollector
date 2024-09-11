@@ -8,6 +8,7 @@ import (
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
 	"ComicCollector/main/backend/utils/env"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -204,6 +205,12 @@ func ImageHandler(rg *gin.RouterGroup) {
 			c.JSON(http.StatusOK, gin.H{"msg": "Cover image uploaded successfully", "error": false})
 		})
 
+	// TODO: implement the PATCH method
+	//			- delete the old image
+	//			- upload the new image
+	//			- update the book with the new image
+	rg.PATCH("/cover/:bookid")
+
 	rg.DELETE("/cover/:id",
 		middleware.CheckJwtToken(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
@@ -253,9 +260,17 @@ func ImageHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+
 			updateData := bson.M{
 				"cover_image": primitive.NilObjectID,
 				"updated_at":  utils.ConvertToDateTime(time.DateTime, time.Now()),
+				"updated_by":  currentUser,
 			}
 			_, err = operations.UpdateBook(database.MongoDB, book.ID, updateData)
 			if err != nil {

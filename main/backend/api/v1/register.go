@@ -2,6 +2,7 @@ package v1
 
 import (
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/helpers"
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
@@ -89,12 +90,11 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		newUser.Username = username
 		newUser.Password = hashedPW
 		newUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-		newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 		// create the restricted user permissions
 		var restrictedUserPermissionIds []primitive.ObjectID
 		for _, permission := range groups.RestrictedUser.Permissions {
-			perm, err := operations.CreatePermission(permission.Name, permission.Description)
+			perm, err := helpers.CreatePermission(permission.Name, permission.Description)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -104,7 +104,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		}
 
 		// create the roles in case they don't exist
-		restrictedUserRole, err := operations.CreateRole(
+		restrictedUserRole, err := helpers.CreateRole(
 			database.MongoDB,
 			groups.RestrictedUser.Name,
 			groups.RestrictedUser.Description,

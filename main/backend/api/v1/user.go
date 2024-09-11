@@ -9,6 +9,7 @@ import (
 	"ComicCollector/main/backend/utils"
 	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -203,12 +204,20 @@ func UserHandler(rg *gin.RouterGroup) {
 					return
 				}
 
+				currentUser, err := webcontext.GetUserId(c)
+				if err != nil {
+					log.Println(err)
+					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+					return
+				}
+
 				var newUser models.User
 				newUser.ID = existingUser.ID
 				newUser.Username = username
 				newUser.Password = hashedPW
 				newUser.CreatedAt = existingUser.CreatedAt
 				newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+				newUser.UpdatedBy = currentUser
 
 				// check the user roles
 				if requestBody.Roles != nil && len(requestBody.Roles) > 0 && !utils.ContainsNilObjectID(requestBody.Roles) {

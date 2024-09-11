@@ -8,6 +8,7 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -112,12 +113,19 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+
 			var newPermission models.Permission
 			newPermission.ID = primitive.NewObjectID()
 			newPermission.Name = requestBody.Name
 			newPermission.Description = requestBody.Description
 			newPermission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newPermission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newPermission.CreatedBy = currentUser
 
 			err = operations.InsertPermission(database.MongoDB, newPermission)
 			if err != nil {
@@ -171,7 +179,15 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
 			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
+			updateData["updated_by"] = currentUser
 
 			// check if the permission already exists
 			_, err = operations.GetPermissionById(database.MongoDB, objID)

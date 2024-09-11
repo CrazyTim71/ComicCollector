@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/JoiHelper"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
@@ -62,6 +65,31 @@ func ValidateRequestBody(requestBody interface{}) error {
 			if field.Interface().(primitive.ObjectID).IsZero() {
 				return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
 			}
+
+			// check if the objectID is valid
+			var modelType string
+			switch v.Type().Field(i).Name {
+			case "BookType":
+				modelType = "BookType"
+			case "BookEdition":
+				modelType = "BookEdition"
+			case "Owners":
+				modelType = "Owner"
+			case "Locations":
+				modelType = "Location"
+			case "Publishers":
+				modelType = "Publisher"
+			case "Authors":
+				modelType = "Author"
+			default:
+				return errors.New("unknown model type")
+			}
+			fmt.Print(modelType)
+
+			if !operations.CheckIfExists(database.MongoDB, modelType, bson.M{"_id": field.Interface().(primitive.ObjectID)}) {
+				return errors.New(v.Type().Field(i).Name + " does not exist")
+			}
+
 		case reflect.Slice:
 			if fieldType.Elem() == reflect.TypeOf(primitive.ObjectID{}) {
 				if len(field.Interface().([]primitive.ObjectID)) == 0 {

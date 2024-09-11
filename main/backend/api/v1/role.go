@@ -8,6 +8,7 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -120,13 +121,20 @@ func RoleHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+
 			var newRole models.Role
 			newRole.ID = primitive.NewObjectID()
 			newRole.Name = requestBody.Name
 			newRole.Description = requestBody.Description
 			newRole.Permissions = requestBody.Permissions
 			newRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newRole.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newRole.CreatedBy = currentUser
 
 			err = operations.InsertRole(database.MongoDB, newRole)
 			if err != nil {
@@ -181,7 +189,15 @@ func RoleHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
 			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
+			updateData["updated_by"] = currentUser
 
 			// check if the role already exists
 			_, err = operations.GetRoleById(database.MongoDB, objID)

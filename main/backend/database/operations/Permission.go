@@ -1,9 +1,7 @@
 package operations
 
 import (
-	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
-	"ComicCollector/main/backend/utils"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -65,29 +63,6 @@ func GetAllPermissionsFromRole(db *mongo.Database, roleId primitive.ObjectID) ([
 	}
 
 	return permissions, nil
-}
-
-func CreatePermission(name string, description string) (models.Permission, error) {
-	var permission models.Permission
-
-	permission.ID = primitive.NewObjectID()
-	permission.Name = name
-	permission.Description = description
-	permission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-	permission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-
-	// check if permission already exists
-	existingPermission, err := GetPermissionByName(database.MongoDB, permission.Name)
-	if err == nil {
-		return existingPermission, nil
-	}
-
-	err = InsertPermission(database.MongoDB, permission)
-	if err != nil {
-		return permission, err
-	}
-
-	return permission, nil
 }
 
 func CheckIfAllPermissionsExist(db *mongo.Database, permissionIds []primitive.ObjectID) bool {

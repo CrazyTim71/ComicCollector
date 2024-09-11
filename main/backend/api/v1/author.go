@@ -8,6 +8,7 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -109,12 +110,19 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+
 			var newAuthor models.Author
 			newAuthor.ID = primitive.NewObjectID()
 			newAuthor.Name = requestBody.Name
 			newAuthor.Description = requestBody.Description
 			newAuthor.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newAuthor.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newAuthor.CreatedBy = currentUser
 
 			err = operations.InsertAuthor(database.MongoDB, newAuthor)
 			if err != nil {
@@ -167,7 +175,15 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
 				return
 			}
+
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
 			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
+			updateData["updated_by"] = currentUser
 
 			// check if the author exists
 			_, err = operations.GetAuthorById(database.MongoDB, objID)

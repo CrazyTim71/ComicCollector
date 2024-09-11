@@ -8,6 +8,7 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,7 +22,7 @@ import (
 func BookHandler(rg *gin.RouterGroup) {
 	rg.GET("",
 		middleware.CheckJwtToken(),
-		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
+		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
@@ -43,7 +44,7 @@ func BookHandler(rg *gin.RouterGroup) {
 
 	rg.GET("/:id",
 		middleware.CheckJwtToken(),
-		middleware.DenyUserGroup(groups.RestrictedUser), // TODO: test this
+		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
@@ -96,9 +97,6 @@ func BookHandler(rg *gin.RouterGroup) {
 				Count       int                  `json:"count"`
 			}
 
-			// TODO: handle the CoverImage file upload
-			// TODO: check if BookType, BookEdition, Author, Publisher, Location and Owner are valid
-
 			if err := c.ShouldBindJSON(&requestBody); err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request body", "error": true})
@@ -134,7 +132,13 @@ func BookHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			// TODO: check if the BookType, BookEdition, Author, Publisher, Location and Owner are valid with operations.CheckIfExists()
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+
 			var newBook models.Book
 			newBook.ID = primitive.NewObjectID()
 			newBook.Title = requestBody.Title
@@ -154,7 +158,7 @@ func BookHandler(rg *gin.RouterGroup) {
 			newBook.Price = requestBody.Price
 			newBook.Count = requestBody.Count
 			newBook.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-			newBook.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+			newBook.CreatedBy = currentUser
 
 			err = operations.InsertBook(database.MongoDB, newBook)
 			if err != nil {
@@ -166,7 +170,137 @@ func BookHandler(rg *gin.RouterGroup) {
 			c.JSON(http.StatusOK, newBook)
 		})
 
-	//rg.PATCH("")
-	//
-	//rg.DELETE("")
+	rg.PATCH("/:id",
+		middleware.CheckJwtToken(),
+		middleware.DenyUserGroup(groups.RestrictedUser),
+		middleware.VerifyHasAllPermission(
+			permissions.BasicApiAccess,
+			permissions.BookModify,
+		),
+		func(c *gin.Context) {
+			id := c.Param("id")
+
+			objID, err := primitive.ObjectIDFromHex(id)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid ID", "error": true})
+				return
+			}
+
+			var requestBody struct {
+				Title       string               `json:"title"`
+				Number      int                  `json:"number"`
+				ReleaseDate string               `json:"release_date"`
+				Description string               `json:"description"`
+				Notes       string               `json:"notes"`
+				Authors     []primitive.ObjectID `json:"authors"`
+				Publishers  []primitive.ObjectID `json:"publishers"`
+				Locations   []primitive.ObjectID `json:"locations"`
+				Owners      []primitive.ObjectID `json:"owners"`
+				BookType    primitive.ObjectID   `json:"book_type"`
+				BookEdition primitive.ObjectID   `json:"book_edition"`
+				Printing    string               `json:"printing"`
+				ISBN        string               `json:"isbn"`
+				Price       string               `json:"price"`
+				Count       int                  `json:"count"`
+			}
+
+			if err := c.ShouldBindJSON(&requestBody); err != nil {
+				log.Println(err)
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid request body", "error": true})
+				return
+			}
+
+			// validate the user input
+			err = utils.ValidateRequestBody(requestBody)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid data. " + err.Error(), "error": true})
+				return
+			}
+
+			// clean the request body from empty fields to receive only the fields that need to be updated
+			updateData := utils.CleanEmptyFields(&requestBody)
+			if len(updateData) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "No data provided to update", "error": true})
+				return
+			}
+
+			currentUser, err := webcontext.GetUserId(c)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+				return
+			}
+			updateData["updated_at"] = utils.ConvertToDateTime(time.DateTime, time.Now())
+			updateData["updated_by"] = currentUser
+
+			// check if the book exists
+			_, err = operations.GetBookById(database.MongoDB, objID)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusNotFound, gin.H{"msg": "Book not found", "error": true})
+				return
+			}
+
+			result, err := operations.UpdateBook(database.MongoDB, objID, updateData)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				return
+			}
+			if result.ModifiedCount == 0 {
+				c.JSON(http.StatusNotModified, gin.H{"msg": "Nothing was updated", "error": true})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{"msg": "Book updated successfully", "error": false})
+		})
+
+	rg.DELETE("/:id",
+		middleware.CheckJwtToken(),
+		middleware.DenyUserGroup(groups.RestrictedUser),
+		middleware.VerifyHasAllPermission(
+			permissions.BasicApiAccess,
+			permissions.BookDelete,
+		),
+		func(c *gin.Context) {
+			id := c.Param("id")
+			objID, err := primitive.ObjectIDFromHex(id)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid ID", "error": true})
+				return
+			}
+
+			// check if the book exists
+			book, err := operations.GetBookById(database.MongoDB, objID)
+			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					c.JSON(http.StatusNotFound, gin.H{"msg": "Book not found", "error": true})
+					return
+				}
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				return
+			}
+
+			// delete the cover image
+			if book.CoverImage != primitive.NilObjectID {
+				err = operations.DeleteImage(database.CoverBucket, book.CoverImage)
+				if err != nil {
+					log.Println(err)
+					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error: unable to delete the old cover file", "error": true})
+					return
+				}
+			}
+
+			// delete the book
+			_, err = operations.DeleteBook(database.MongoDB, objID)
+			if err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{"msg": "Book deleted successfully", "error": false})
+		})
 }

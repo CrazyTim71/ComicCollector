@@ -7,10 +7,11 @@ import (
 	"time"
 )
 
-func CheckIfExists(collection *mongo.Collection, filter bson.M) bool {
+func CheckIfExists(db *mongo.Database, collectionName string, filter bson.M) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	collection := db.Collection(collectionName)
 	_, err := collection.Find(ctx, filter)
 	if err != nil {
 		return false
