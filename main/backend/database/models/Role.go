@@ -9,4 +9,6 @@ type Role struct {
 	Permissions []primitive.ObjectID `json:"permissions" bson:"permissions"`
 	CreatedAt   primitive.DateTime   `json:"created_at" bson:"created_at"`
 	UpdatedAt   primitive.DateTime   `json:"updated_at" bson:"updated_at"`
+	CreatedBy   primitive.ObjectID   `json:"created_by" bson:"created_by"`
+	UpdatedBy   primitive.ObjectID   `json:"updated_by" bson:"updated_by"`
 }

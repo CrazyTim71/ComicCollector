@@ -10,6 +10,7 @@ CREATE TABLE "user" (
 CREATE TABLE "owner" (
   "id" integer PRIMARY KEY,
   "name" string,
+  "description" string,
   "created_at" integer,
   "updated_at" integer
 );
@@ -56,6 +57,7 @@ CREATE TABLE "role" (
 CREATE TABLE "publisher" (
   "id" integer PRIMARY KEY,
   "name" string,
+  "description" string,
   "website_url" string,
   "country" string,
   "created_at" integer,
@@ -65,6 +67,7 @@ CREATE TABLE "publisher" (
 CREATE TABLE "author" (
   "id" integer PRIMARY KEY,
   "name" string,
+  "description" string,
   "created_at" integer,
   "updated_at" integer
 );
@@ -72,6 +75,7 @@ CREATE TABLE "author" (
 CREATE TABLE "book_type" (
   "id" integer PRIMARY KEY,
   "name" string,
+  "description" string,
   "created_at" integer,
   "updated_at" integer
 );
@@ -87,6 +91,7 @@ CREATE TABLE "book_location" (
 CREATE TABLE "book_edition" (
   "id" integer PRIMARY KEY,
   "name" string,
+  "description" string,
   "created_at" integer,
   "updated_at" integer
 );

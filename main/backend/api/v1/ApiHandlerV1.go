@@ -20,4 +20,34 @@ func ApiHandler(rg *gin.RouterGroup) {
 
 	book := rg.Group("/book")
 	BookHandler(book)
+
+	author := rg.Group("/book/author")
+	AuthorHandler(author)
+
+	bookEdition := rg.Group("/book/edition")
+	BookEditionHandler(bookEdition)
+
+	bookType := rg.Group("/book/type")
+	BookTypeHandler(bookType)
+
+	location := rg.Group("/book/location")
+	LocationHandler(location)
+
+	owner := rg.Group("/book/owner")
+	OwnerHandler(owner)
+
+	publisher := rg.Group("/book/publisher")
+	PublisherHandler(publisher)
+
+	// admin only
+	permissions := rg.Group("/permission")
+	PermissionsHandler(permissions)
+
+	// admin only
+	role := rg.Group("/role")
+	RoleHandler(role)
+
+	image := rg.Group("/image")
+	ImageHandler(image)
+
 }

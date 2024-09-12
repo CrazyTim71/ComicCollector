@@ -21,6 +21,9 @@ var (
 		Name:        "Administrator",
 		Description: "Full access to all features",
 		Permissions: []permissions.Permission{
+			//global stuff
+			permissions.BasicApiAccess,
+
 			// user stuff
 			permissions.UserViewAll,
 			permissions.UserModifyAll,
@@ -31,7 +34,50 @@ var (
 			permissions.BookCreate,
 			permissions.BookModify,
 			permissions.BookDelete,
-			permissions.BookViewAll, // nothing special
+
+			// author stuff
+			permissions.AuthorCreate,
+			permissions.AuthorModify,
+			permissions.AuthorDelete,
+
+			// book edition stuff
+			permissions.BookEditionCreate,
+			permissions.BookEditionModify,
+			permissions.BookEditionDelete,
+
+			// book type stuff
+			permissions.BookTypeCreate,
+			permissions.BookTypeModify,
+			permissions.BookTypeDelete,
+
+			// location stuff
+			permissions.LocationCreate,
+			permissions.LocationModify,
+			permissions.LocationDelete,
+
+			// owner stuff
+			permissions.OwnerCreate,
+			permissions.OwnerModify,
+			permissions.OwnerDelete,
+
+			// permission stuff
+			permissions.PermissionCreate,
+			permissions.PermissionModify,
+			permissions.PermissionDelete,
+
+			// publisher stuff
+			permissions.PublisherCreate,
+			permissions.PublisherModify,
+			permissions.PublisherDelete,
+
+			// role stuff
+			permissions.RoleCreate,
+			permissions.RoleModify,
+			permissions.RoleDelete,
+
+			// cover stuff
+			permissions.CoverUpload,
+			permissions.CoverDelete,
 		},
 	}
 
@@ -39,13 +85,43 @@ var (
 		Name:        "User",
 		Description: "Basic access to all features",
 		Permissions: []permissions.Permission{
+			//global stuff
+			permissions.BasicApiAccess,
+
 			// user stuff
 			permissions.UserViewSelf,
 			permissions.UserModifySelf,
 			permissions.UserDeleteSelf,
 
 			// book stuff
-			permissions.BookViewAll, // nothing special
+			// no permissions yet
+
+			// author stuff
+			permissions.AuthorCreate,
+
+			// book edition stuff
+			permissions.BookEditionCreate,
+
+			// book type stuff
+			permissions.BookTypeCreate,
+
+			// location stuff
+			permissions.LocationCreate,
+
+			// owner stuff
+			permissions.OwnerCreate,
+
+			// permission stuff
+			// no permissions yet
+
+			// publisher stuff
+			permissions.PublisherCreate,
+
+			// role stuff
+			// no permissions yet
+
+			// cover stuff
+			permissions.CoverUpload,
 		},
 	}
 

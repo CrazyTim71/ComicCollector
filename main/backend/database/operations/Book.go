@@ -34,11 +34,49 @@ func GetBookById(db *mongo.Database, id primitive.ObjectID) (models.Book, error)
 	return book, err
 }
 
-func CreateBook(db *mongo.Database, book models.Book) error {
+func GetBookByTitle(db *mongo.Database, title string) (models.Book, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var book models.Book
+	err := db.Collection("book").FindOne(ctx, bson.M{"title": title}).Decode(&book)
+
+	return book, err
+}
+
+func GetBookByCoverImage(db *mongo.Database, coverImage primitive.ObjectID) (models.Book, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var book models.Book
+	err := db.Collection("book").FindOne(ctx, bson.M{"cover_image": coverImage}).Decode(&book)
+
+	return book, err
+}
+
+func InsertBook(db *mongo.Database, book models.Book) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	_, err := db.Collection("book").InsertOne(ctx, book)
 
 	return err
+}
+
+func UpdateBook(db *mongo.Database, id primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := db.Collection("book").UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": data})
+
+	return result, err
+}
+
+func DeleteBook(db *mongo.Database, id primitive.ObjectID) (*mongo.DeleteResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := db.Collection("book").DeleteOne(ctx, bson.M{"_id": id})
+
+	return result, err
 }

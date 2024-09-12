@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "head"}}
+
+    <body>
+        <div class="vh-100 d-flex justify-content-center">
+            <div class="container mt-3 mb-3">
+                <div id="app">
+                    <form @submit.prevent="submitForm" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="title" class="form-label">Title:</label>
+                                <input type="text" id="title" class="form-control" v-model="title" required />
+                                <div class="text-danger">${ errors.title }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="number" class="form-label">Number:</label>
+                                <input type="number" id="number" class="form-control" v-model="number" required min="0" />
+                                <div class="text-danger">${ errors.number }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="book_edition" class="form-label">Book Edition:</label>
+
+                                <div class="input-group">
+                                    <div class="form-control d-flex flex-wrap" style="height: auto;">
+                                        <span v-for="(entity, index) in getSelectedEntities('edition')" :key="entity.id" class="badge bg-primary me-2 d-flex align-items-center justify-content-center">
+                                            ${ entity.name }
+                                            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Close" @click="removeEntity(index, 'edition')"></button>
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary" @click="openSelectDialog('edition', false)">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" @click="openCreateDialog('edition')">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+
+                                <div class="text-danger">${ errors.edition }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="fetch_data" class="form-label">Try to fetch data and cover from the internet:</label>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-secondary" @click="openFetchDialog()">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="release_date" class="form-label">Release Date:</label>
+                                <div class="input-group">
+                                    <input type="date" id="release_date" class="form-control" v-model="release_date" required />
+                                    <button type="button" class="btn btn-outline-secondary" @click="setToNow">Set to Now</button>
+                                </div>
+                                <div class="text-danger">${ errors.releaseDate }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="cover_image" class="form-label">Cover Image:</label>
+                                <input type="file" id="cover_image" class="form-control" accept=".jpg, .jpeg, .png" @change="handleFileUpload" required />
+                                <div class="text-danger">${ errors.coverImage }</div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="description" class="form-label">Description:</label>
+                                <textarea id="description" class="form-control" v-model="description" required></textarea>
+                                <div class="text-danger">${ errors.description }</div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="notes" class="form-label">Notes:</label>
+                                <textarea id="notes" class="form-control" v-model="notes" required></textarea>
+                                <div class="text-danger">${ errors.notes }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="authors" class="form-label">Authors:</label>
+
+                                <div class="input-group">
+                                    <div class="form-control d-flex flex-wrap" style="height: auto;">
+                                        <span v-for="(entity, index) in getSelectedEntities('author')" :key="entity.id" class="badge bg-primary me-2 d-flex align-items-center justify-content-center">
+                                            ${ entity.name }
+                                            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Close" @click="removeEntity(index, 'author')"></button>
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary" @click="openSelectDialog('author')">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" @click="openCreateDialog('author')">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+
+                                <div class="text-danger">${ errors.author }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="publishers" class="form-label">Publishers:</label>
+
+                                <div class="input-group">
+                                    <div class="form-control d-flex flex-wrap" style="height: auto;">
+                                        <span v-for="(entity, index) in getSelectedEntities('publisher')" :key="entity.id" class="badge bg-primary me-2 d-flex align-items-center justify-content-center">
+                                            ${ entity.name }
+                                            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Close" @click="removeEntity(index, 'publisher')"></button>
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary" @click="openSelectDialog('publisher')">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" @click="openCreateDialog('publisher')">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+
+                                <div class="text-danger">${ errors.publisher }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="locations" class="form-label">Locations:</label>
+
+                                <div class="input-group">
+                                    <div class="form-control d-flex flex-wrap" style="height: auto;">
+                                        <span v-for="(entity, index) in getSelectedEntities('location')" :key="entity.id" class="badge bg-primary me-2 d-flex align-items-center justify-content-center">
+                                            ${ entity.name }
+                                            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Close" @click="removeEntity(index, 'location')"></button>
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary" @click="openSelectDialog('location')">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" @click="openCreateDialog('location')">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+
+                                <div class="text-danger">${ errors.location }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="owners" class="form-label">Owners:</label>
+
+                                <div class="input-group">
+                                    <div class="form-control d-flex flex-wrap" style="height: auto;">
+                                        <span v-for="(entity, index) in getSelectedEntities('owner')" :key="entity.id" class="badge bg-primary me-2 d-flex align-items-center justify-content-center">
+                                            ${ entity.name }
+                                            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Close" @click="removeEntity(index, 'owner')"></button>
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary" @click="openSelectDialog('owner')">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" @click="openCreateDialog('owner')">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+
+                                <div class="text-danger">${ errors.owner }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="book_type" class="form-label">Book Type:</label>
+
+                                <div class="input-group">
+                                    <div class="form-control d-flex flex-wrap" style="height: auto;">
+                                        <span v-for="(entity, index) in getSelectedEntities('type')" :key="entity.id" class="badge bg-primary me-2 d-flex align-items-center justify-content-center">
+                                            ${ entity.name }
+                                            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Close" @click="removeEntity(index, 'type')"></button>
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary" @click="openSelectDialog('type', false)">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" @click="openCreateDialog('type')">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+
+                                <div class="text-danger">${ errors.type }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="printing" class="form-label">Printing:</label>
+                                <input type="text" id="printing" class="form-control" v-model="printing" required />
+                                <div class="text-danger">${ errors.printing }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="isbn" class="form-label">ISBN:</label>
+                                <input type="text" id="isbn" class="form-control" v-model="isbn" required />
+                                <div class="text-danger">${ errors.isbn }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="price" class="form-label">Price:</label>
+                                <input type="text" id="price" class="form-control" v-model="price" required />
+                                <div class="text-danger">${ errors.price }</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="count" class="form-label">Count:</label>
+                                <input type="number" id="count" class="form-control" v-model="count" required min="0" />
+                                <div class="text-danger">${ errors.count }</div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-4">Submit</button>
+                        <button type="reset" class="btn btn-secondary w-100 mt-2" @click="resetData">Reset</button>
+                        <button type="button" class="btn btn-secondary w-100 mt-2" @click="inputTestData">Test Data</button>
+                    </form>
+
+                    <!-- Select Dialog Modal -->
+                    <div class="modal fade" tabindex="-1" role="dialog" ref="selectModal">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Select ${ currentEntity }</h5>
+                                    <button type="button" class="btn-close" @click="closeModal('selectModal')"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="search">Search ${ currentEntity }</label>
+                                        <input type="text" class="form-control" v-model="searchQuery" placeholder="Search...">
+                                    </div>
+                                    <div class="row mt-3">
+                                        <!-- Entity List -->
+                                        <div class="col-md-6">
+                                            <h6>Available ${ currentEntity }s</h6>
+                                            <ul class="list-group">
+                                                <li v-for="entity in filteredEntities" :key="entity.id" class="list-group-item d-flex justify-content-between align-items-center">
+                                                    ${ entity.name }
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" @click="addToSelection(entity)">Add</button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <!-- Selected List -->
+                                        <div class="col-md-6">
+                                            <h6>Selected ${ currentEntity }s</h6>
+                                            <ul class="list-group">
+                                                <li v-for="(entity, index) in selectedEntities" :key="entity.id" class="list-group-item d-flex justify-content-between align-items-center">
+                                                    ${ entity.name }
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" @click="removeFromSelection(index)">Remove</button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @click="closeModal('selectModal')">Close</button>
+                                    <button type="button" class="btn btn-primary" @click="selectEntity">Add Selected</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+{{/*                    TODO: Implement the Create Dialog Modal*/}}
+
+                    <div v-if="error" id="error-message" class="alert alert-danger text-center mt-3 mb-3">
+                        ${ error }
+                    </div>
+
+                    <div v-if="success" id="success-message" class="alert alert-success text-center mt-3 mb-3">
+                        Book with ID ${ newBookId } has been successfully created.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .cursor-pointer {
+                cursor: pointer;
+            }
+        </style>
+
+        <script>
+            const app = Vue.createApp({
+                delimiters: ['${', '}'],
+                data: () => ({
+                    // Form data
+                    title: '',
+                    number: '',
+                    release_date: '',
+                    cover_image: null,
+                    description: '',
+                    notes: '',
+
+                    persistentSelectedAuthors: [],
+                    persistentSelectedPublishers: [],
+                    persistentSelectedLocations: [],
+                    persistentSelectedOwners: [],
+                    persistentSelectedTypes: [],
+                    persistentSelectedEditions: [],
+
+                    printing: '',
+                    isbn: '',
+                    price: '',
+                    count: '',
+                    error: "",
+                    success: false,
+
+                    newBookId: '',
+
+                    // for the dialogs
+                    currentEntity: '',
+                    entityList: [],
+                    searchQuery: '',
+                    newEntityName: '',
+                    selectedEntities: [], // Temporary selection in the modal
+                    allowMultiple: true,
+
+                    errors: {
+                        title: '',
+                        number: '',
+                        releaseDate: '',
+                        coverImage: '',
+                        description: '',
+                        notes: '',
+                        author: '',
+                        publisher: '',
+                        location: '',
+                        owner: '',
+                        type: '',
+                        edition: '',
+                        printing: '',
+                        isbn: '',
+                        price: '',
+                        count: '',
+                    },
+                }),
+                computed: {
+                    getAutofill(){
+                        // TODO: Implement autofill
+                    },
+                    filteredEntities() {
+                        return this.entityList.filter(entity => entity.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                    },
+                },
+                methods: {
+                    capitalize(str) {
+                        return str.charAt(0).toUpperCase() + str.slice(1);
+                    },
+                    handleFileUpload(e) {
+                        this.cover_image = e.target.files[0];
+                    },
+                    setToNow() {
+                        const now = new Date();
+                        this.release_date = now.toISOString().slice(0, 10);
+                    },
+                    inputTestData() {
+                        this.title = 'Test Title';
+                        this.number = 1;
+                        this.release_date = '2021-01-01';
+                        this.description = 'Test Description';
+                        this.notes = 'Test Notes';
+                        this.printing = 'Test Printing';
+                        this.isbn = 'Test ISBN';
+                        this.price = 'Test Price';
+                        this.count = 1;
+                    },
+                    resetData() {
+                        this.title = '';
+                        this.number = '';
+                        this.release_date = '';
+                        this.cover_image = null;
+                        this.description = '';
+                        this.notes = '';
+                        this.persistentSelectedAuthors = [];
+                        this.persistentSelectedPublishers = [];
+                        this.persistentSelectedLocations = [];
+                        this.persistentSelectedOwners = [];
+                        this.persistentSelectedTypes = [];
+                        this.persistentSelectedEditions = [];
+                        this.printing = '';
+                        this.isbn = '';
+                        this.price = '';
+                        this.count = '';
+                        this.error = '';
+                    },
+                    openSelectDialog(entity, allowMultiple = true) {
+                        this.currentEntity = entity;
+                        this.allowMultiple = allowMultiple;
+                        this.selectedEntities = [...this[`persistentSelected${this.capitalize(entity)}s`]];
+                        this.loadEntities(entity);
+                        const modal = new bootstrap.Modal(this.$refs.selectModal);
+                        modal.show();
+                    },
+                    openCreateDialog(entity) {
+                        this.currentEntity = entity;
+                        const modal = new bootstrap.Modal(this.$refs.createModal);
+                        modal.show();
+                    },
+                    closeModal(ref) {
+                        const modal = bootstrap.Modal.getInstance(this.$refs[ref]);
+                        modal.hide();
+                    },
+                    async loadEntities(entity) {
+                        // Fetch entities from the backend based on the entity type (e.g., author)
+                        const response = await fetch('/api/v1/book/' + entity.toLowerCase());
+                        if (response.ok) {
+                            this.entityList = await response.json();
+                        } else {
+                            this.error = 'Failed to load ' + entity;
+                        }
+                    },
+                    addToSelection(entity) {
+                        if (this.allowMultiple) {
+                            if (!this.selectedEntities.some(e => e.id === entity.id)) {
+                                this.selectedEntities.push(entity);
+                            }
+                        } else {
+                            // If multiple selections are not allowed, replace the current selection
+                            this.selectedEntities = [entity];
+                        }
+                    },
+                    removeFromSelection(index) {
+                        this.selectedEntities.splice(index, 1);
+                    },
+                    removeEntity(index, type) {
+                        this[`persistentSelected${this.capitalize(type)}s`].splice(index, 1);
+
+                    },
+                    selectEntity() {
+                        let entityName = this.currentEntity.toLowerCase();
+                        let varName = `persistentSelected${this.capitalize(this.currentEntity)}s`;
+
+                        // if (Object.prototype.hasOwnProperty.call(this, varName)) {
+                        //     this[`persistentSelected${this.capitalize(this.currentEntity)}`] = [...this.selectedEntities];
+                        this[`persistentSelected${this.capitalize(this.currentEntity)}s`] = [...this.selectedEntities];
+
+                        this.selectedEntities = [];
+                        this.closeModal('selectModal');
+                    },
+                    getSelectedEntities(type) {
+                        return this[`persistentSelected${this.capitalize(type)}s`];
+                    },
+                    validateForm() {
+                        let isValid = true;
+
+                        // Validate Title
+                        if (!this.title || this.title === '') {
+                            this.errors.title = 'Title is required.';
+                            isValid = false;
+                        } else {
+                            this.errors.title = '';
+                        }
+
+                        // Validate Number
+                        if (!this.number || this.number < 0) {
+                            this.errors.number = 'Number is required.';
+                            isValid = false;
+                        } else {
+                            this.errors.number = '';
+                        }
+
+                        // Validate Book Edition
+                        if (!this.persistentSelectedEditions || this.persistentSelectedEditions.length === 0) {
+                            this.errors.edition = 'Please select at the book edition.';
+                            isValid = false;
+                        } else {
+                            this.errors.edition = '';
+                        }
+
+                        // Validate Release Date
+                        if (!this.release_date || this.release_date === '') {
+                            this.errors.releaseDate = 'Release Date is required.';
+                            isValid = false;
+                        } else {
+                            this.errors.releaseDate = '';
+                        }
+
+                        // Validate Owner
+                        if (!this.persistentSelectedOwners || this.persistentSelectedOwners.length === 0) {
+                            this.errors.owner = 'Please select at least one owner.';
+                            isValid = false;
+                        } else {
+                            this.errors.owner = '';
+                        }
+
+                        // Validate Type
+                        if (!this.persistentSelectedTypes || this.persistentSelectedTypes.length === 0) {
+                            this.errors.type = 'Please select the book type.';
+                            isValid = false;
+                        } else {
+                            this.errors.type = '';
+                        }
+
+                        // Count
+                        if (!this.count || this.count < 0) {
+                            this.errors.count = 'Count is required.';
+                            isValid = false;
+                        } else {
+                            this.errors.count = '';
+                        }
+
+                        return isValid;
+                    },
+                    async submitForm() {
+                        this.error = "";
+
+                        if (!this.validateForm()) {
+                            return;
+                        }
+
+                        // Prepare JSON data
+                        const jsonData = {
+                            title: this.title,
+                            number: this.number,
+                            release_date: this.release_date,
+                            description: this.description,
+                            notes: this.notes,
+                            authors: this.persistentSelectedAuthors.map(a => a.id),
+                            publishers: this.persistentSelectedPublishers.map(p => p.id),
+                            locations: this.persistentSelectedLocations.map(l => l.id),
+                            owners: this.persistentSelectedOwners.map(o => o.id),
+                            book_type: this.persistentSelectedTypes[0].id,
+                            book_edition: this.persistentSelectedEditions[0].id,
+                            printing: this.printing,
+                            isbn: this.isbn,
+                            price: this.price,
+                            count: this.count
+                        };
+
+                        let response = await fetch('/api/v1/book', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(jsonData)
+                        })
+
+                        if (!response.ok) {
+                            const result = await response.json();
+                            this.error = result.msg;
+                            return;
+                        }
+                        this.newBookId = (await response.json()).id;
+
+                        // Then, send the file if it exists
+                        if (this.cover_image) {
+                            const formData = new FormData();
+                            formData.append('cover_image', this.cover_image);
+
+                            response = await fetch('/api/v1/image/cover/' + this.newBookId, {
+                                method: 'POST',
+                                body: formData,
+                            });
+
+                            if (!response.ok) {
+                                const result = await response.json();
+                                this.error = result.msg;
+                                return;
+                            }
+                            }
+
+                        this.success = true;
+                        this.resetData()
+                    }
+                },
+            })
+            app.mount('#app')
+        </script>
+    </body>
+</html>

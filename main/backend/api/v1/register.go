@@ -2,11 +2,12 @@ package v1
 
 import (
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/helpers"
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/utils"
-	"ComicCollector/main/backend/utils/Joi"
+	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
 	"ComicCollector/main/backend/utils/env"
 	"github.com/gin-gonic/gin"
@@ -46,13 +47,13 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		}
 
 		// check if username and password are allowed
-		if err := Joi.UsernameSchema.Validate(requestBody.Username); err != nil {
+		if err := JoiHelper.UsernameSchema.Validate(requestBody.Username); err != nil {
 			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid username. Please remove all invalid characters and try again.", "error": true})
 			return
 		}
 
-		if err := Joi.PasswordSchema.Validate(requestBody.Password); err != nil {
+		if err := JoiHelper.PasswordSchema.Validate(requestBody.Password); err != nil {
 			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid password. Please follow the password rules.", "error": true})
 			return
@@ -89,12 +90,11 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		newUser.Username = username
 		newUser.Password = hashedPW
 		newUser.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-		newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 		// create the restricted user permissions
 		var restrictedUserPermissionIds []primitive.ObjectID
 		for _, permission := range groups.RestrictedUser.Permissions {
-			perm, err := operations.CreatePermission(permission.Name, permission.Description)
+			perm, err := helpers.CreatePermission(permission.Name, permission.Description)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -103,8 +103,9 @@ func RegisterHandler(rg *gin.RouterGroup) {
 			restrictedUserPermissionIds = append(restrictedUserPermissionIds, perm.ID)
 		}
 
-		// create the roles
-		restrictedUserRole, err := operations.CreateRole(
+		// create the roles in case they don't exist
+		restrictedUserRole, err := helpers.CreateRole(
+			database.MongoDB,
 			groups.RestrictedUser.Name,
 			groups.RestrictedUser.Description,
 			restrictedUserPermissionIds,
@@ -118,7 +119,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		// add the role to the user
 		newUser.Roles = append(newUser.Roles, restrictedUserRole.ID)
 
-		err = operations.CreateUser(database.MongoDB, newUser)
+		err = operations.InsertUser(database.MongoDB, newUser)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

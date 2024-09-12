@@ -3,7 +3,7 @@ package v1
 import (
 	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/operations"
-	"ComicCollector/main/backend/utils/Joi"
+	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -27,14 +27,14 @@ func LoginHandler(rg *gin.RouterGroup) {
 		}
 
 		// check username input
-		if err := Joi.UsernameSchema.Validate(requestBody.Username); err != nil {
+		if err := JoiHelper.UsernameSchema.Validate(requestBody.Username); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid username. Please remove all invalid characters and try again.", "error": true})
 			log.Println(err)
 			return
 		}
 
 		// check password input
-		if err := Joi.PasswordSchema.Validate(requestBody.Password); err != nil {
+		if err := JoiHelper.PasswordSchema.Validate(requestBody.Password); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid password. Please remove all invalid characters and try again.", "error": true})
 			log.Println(err)
 			return

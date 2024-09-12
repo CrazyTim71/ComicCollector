@@ -1,9 +1,7 @@
 package operations
 
 import (
-	"ComicCollector/main/backend/database"
 	"ComicCollector/main/backend/database/models"
-	"ComicCollector/main/backend/utils"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,13 +10,19 @@ import (
 	"time"
 )
 
-func SavePermission(db *mongo.Database, newPermission models.Permission) error {
+func GetAllPermissions(db *mongo.Database) ([]models.Permission, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := db.Collection("permission").InsertOne(ctx, newPermission, options.InsertOne())
+	cursor, err := db.Collection("permission").Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	var permissions []models.Permission
+	err = cursor.All(ctx, &permissions)
+
+	return permissions, err
 }
 
 func GetPermissionById(db *mongo.Database, permissionId primitive.ObjectID) (models.Permission, error) {
@@ -61,25 +65,44 @@ func GetAllPermissionsFromRole(db *mongo.Database, roleId primitive.ObjectID) ([
 	return permissions, nil
 }
 
-func CreatePermission(name string, description string) (models.Permission, error) {
-	var permission models.Permission
+func CheckIfAllPermissionsExist(db *mongo.Database, permissionIds []primitive.ObjectID) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	permission.ID = primitive.NewObjectID()
-	permission.Name = name
-	permission.Description = description
-	permission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-	permission.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-
-	// check if permission already exists
-	existingPermission, err := GetPermissionByName(database.MongoDB, permission.Name)
-	if err == nil {
-		return existingPermission, nil
-	}
-
-	err = SavePermission(database.MongoDB, permission)
+	cursor, err := db.Collection("permission").Find(ctx, bson.M{"_id": bson.M{"$in": permissionIds}})
 	if err != nil {
-		return permission, err
+		return false
 	}
 
-	return permission, nil
+	var foundRoles []models.Role
+	err = cursor.All(ctx, &foundRoles)
+
+	return len(foundRoles) == len(permissionIds)
+}
+
+func InsertPermission(db *mongo.Database, newPermission models.Permission) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := db.Collection("permission").InsertOne(ctx, newPermission, options.InsertOne())
+
+	return err
+}
+
+func UpdatePermission(db *mongo.Database, permissionId primitive.ObjectID, data bson.M) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := db.Collection("permission").UpdateOne(ctx, bson.M{"_id": permissionId}, bson.M{"$set": data})
+
+	return result, err
+}
+
+func DeletePermission(db *mongo.Database, permissionId primitive.ObjectID) (*mongo.DeleteResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := db.Collection("permission").DeleteOne(ctx, bson.M{"_id": permissionId})
+
+	return result, err
 }

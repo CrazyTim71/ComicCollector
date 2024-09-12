@@ -7,8 +7,9 @@ import (
 	"ComicCollector/main/backend/database/permissions"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
-	"ComicCollector/main/backend/utils/Joi"
+	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
+	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,6 +37,11 @@ func UserHandler(rg *gin.RouterGroup) {
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
 			}
+
+			if users == nil {
+				users = []models.User{}
+			}
+
 			c.JSON(http.StatusOK, users)
 		})
 
@@ -43,14 +49,6 @@ func UserHandler(rg *gin.RouterGroup) {
 		middleware.CheckJwtToken(),
 		func(c *gin.Context) {
 			id := c.Param("id")
-
-			// TODO : use this
-			//userId, err := webcontext.GetUserId(c)
-			//if err != nil {
-			//	log.Println(err)
-			//	c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			//	return
-			//}
 
 			userId, exits := c.Get("userId")
 			if !exits {
@@ -84,6 +82,10 @@ func UserHandler(rg *gin.RouterGroup) {
 
 			user, err := operations.GetUserById(database.MongoDB, objID)
 			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					c.JSON(http.StatusNotFound, gin.H{"msg": "User not found", "error": true})
+					return
+				}
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
 				return
@@ -129,9 +131,10 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				var requestBody struct {
-					Username         string `json:"username" binding:"required"`
-					Password         string `json:"password" binding:"required"`
-					PasswordRepeated string `json:"passwordRepeated" binding:"required"`
+					Username         string               `json:"username" binding:"required"`
+					Password         string               `json:"password" binding:"required"`
+					PasswordRepeated string               `json:"passwordRepeated" binding:"required"`
+					Roles            []primitive.ObjectID `json:"roles"`
 				}
 
 				if err := c.ShouldBindJSON(&requestBody); err != nil {
@@ -147,13 +150,13 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				// check if username and password are allowed
-				if err := Joi.UsernameSchema.Validate(requestBody.Username); err != nil {
+				if err := JoiHelper.UsernameSchema.Validate(requestBody.Username); err != nil {
 					c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid username. Please remove all invalid characters and try again.", "error": true})
 					log.Println(err)
 					return
 				}
 
-				if err := Joi.PasswordSchema.Validate(requestBody.Password); err != nil {
+				if err := JoiHelper.PasswordSchema.Validate(requestBody.Password); err != nil {
 					c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid password. Please follow the password rules.", "error": true})
 					log.Println(err)
 					return
@@ -201,14 +204,35 @@ func UserHandler(rg *gin.RouterGroup) {
 					return
 				}
 
+				currentUser, err := webcontext.GetUserId(c)
+				if err != nil {
+					log.Println(err)
+					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
+					return
+				}
+
 				var newUser models.User
 				newUser.ID = existingUser.ID
 				newUser.Username = username
 				newUser.Password = hashedPW
 				newUser.CreatedAt = existingUser.CreatedAt
 				newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
+				newUser.UpdatedBy = currentUser
 
-				result, err := operations.UpdateUserById(database.MongoDB, objID, newUser)
+				// check the user roles
+				if requestBody.Roles != nil && len(requestBody.Roles) > 0 && !utils.ContainsNilObjectID(requestBody.Roles) {
+					// check if the roles exist
+					if !operations.CheckIfAllRolesExist(database.MongoDB, requestBody.Roles) {
+						log.Println("Not all provided role ids exist/are valid")
+						c.JSON(http.StatusBadRequest, gin.H{"msg": "Not all provided role ids exist/are valid", "error": true})
+						return
+					}
+					newUser.Roles = requestBody.Roles
+				} else {
+					newUser.Roles = existingUser.Roles
+				}
+
+				result, err := operations.UpdateUser(database.MongoDB, objID, newUser)
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -261,7 +285,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				// delete the user
-				err = operations.DeleteUserById(database.MongoDB, objID)
+				_, err = operations.DeleteUser(database.MongoDB, objID)
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
