@@ -36,7 +36,7 @@ func PerformFirstRunTasks() error {
 	// create the user permissions
 	var userPermissionIds []primitive.ObjectID
 	for _, permission := range groups.User.Permissions {
-		perm, err := helpers.CreatePermission(permission.Name, permission.Description)
+		perm, err := helpers.CreatePermission(permission.Name(), permission.Description())
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func PerformFirstRunTasks() error {
 	// create the admin permissions
 	var adminPermissionIds []primitive.ObjectID
 	for _, permission := range groups.Administrator.Permissions {
-		perm, err := helpers.CreatePermission(permission.Name, permission.Description)
+		perm, err := helpers.CreatePermission(permission.Name(), permission.Description())
 		if err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ func PerformFirstRunTasks() error {
 	// create the restricted permissions
 	var restrictedPermissionIds []primitive.ObjectID
 	for _, permission := range groups.RestrictedUser.Permissions {
-		perm, err := helpers.CreatePermission(permission.Name, permission.Description)
+		perm, err := helpers.CreatePermission(permission.Name(), permission.Description())
 		if err != nil {
 			return err
 		}

@@ -61,7 +61,7 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 					return
 				}
 
-				if containsPermission(rolePermissions, requiredPermission.Name) {
+				if containsPermission(rolePermissions, requiredPermission.Name()) {
 					hasPermission = true
 					break
 				}
@@ -123,7 +123,7 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 					return
 				}
 
-				if containsPermission(rolePermissions, requiredPermission.Name) {
+				if containsPermission(rolePermissions, requiredPermission.Name()) {
 					hasPermission = true
 					break
 				}

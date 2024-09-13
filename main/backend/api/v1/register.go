@@ -95,7 +95,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		// create the restricted user permissions
 		var restrictedUserPermissionIds []primitive.ObjectID
 		for _, permission := range groups.RestrictedUser.Permissions {
-			perm, err := helpers.CreatePermission(permission.Name, permission.Description)
+			perm, err := helpers.CreatePermission(permission.Name(), permission.Description())
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
