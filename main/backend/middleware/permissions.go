@@ -21,7 +21,7 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 		// check if the user is logged in
 		loggedIn, exists := c.Get("loggedIn")
 		if !exists || !loggedIn.(bool) {
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
 		}
@@ -30,7 +30,7 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 		userId, err := webcontext.GetUserId(c)
 		if err != nil {
 			log.Println(err)
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
 		}
@@ -73,7 +73,6 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 			c.Abort()
 			return
 		}
-
 	}
 }
 
@@ -84,7 +83,7 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 		// check if the user is logged in
 		loggedIn, exists := c.Get("loggedIn")
 		if !exists || !loggedIn.(bool) {
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
 		}
@@ -92,7 +91,7 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 		userId, err := webcontext.GetUserId(c)
 		if err != nil {
 			log.Println(err)
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
 		}
@@ -108,9 +107,11 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 			return
 		}
 
+		permissionCounter := 0
 		// check if any role has the required permission
-		hasPermission := false
 		for _, requiredPermission := range requiredPermissions {
+			hasPermission := false
+
 			// get every role and check its permissions
 			for _, roleId := range user.Roles {
 				rolePermissions, err := operations.GetAllPermissionsFromRole(database.MongoDB, roleId)
@@ -125,6 +126,7 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 
 				if containsPermission(rolePermissions, requiredPermission.Name()) {
 					hasPermission = true
+					permissionCounter++
 					break
 				}
 			}
@@ -136,7 +138,7 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 			}
 		}
 
-		if !hasPermission {
+		if permissionCounter != len(requiredPermissions) {
 			c.JSON(http.StatusForbidden, gin.H{"msg": "Not enough permissions to access this resource", "error": true})
 			c.Abort()
 			return
@@ -159,7 +161,7 @@ func VerifyUserGroup(group groups.UserGroup) gin.HandlerFunc {
 		// check if the user is logged in
 		loggedIn, exists := c.Get("loggedIn")
 		if !exists || !loggedIn.(bool) {
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
 		}
@@ -167,7 +169,7 @@ func VerifyUserGroup(group groups.UserGroup) gin.HandlerFunc {
 		userId, err := webcontext.GetUserId(c)
 		if err != nil {
 			log.Println(err)
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()
 			return
 		}
@@ -195,7 +197,7 @@ func DenyUserGroup(group groups.UserGroup) gin.HandlerFunc {
 		// check if the user is logged in
 		loggedIn, exists := c.Get("loggedIn")
 		if !exists || !loggedIn.(bool) {
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusForbidden, gin.H{"msg": "Not enough permissions", "error": true})
 			c.Abort()
 			return
 		}
@@ -203,7 +205,7 @@ func DenyUserGroup(group groups.UserGroup) gin.HandlerFunc {
 		userId, err := webcontext.GetUserId(c)
 		if err != nil {
 			log.Println(err)
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred", "error": true})
 			c.Abort()
 			return
 		}
@@ -211,13 +213,13 @@ func DenyUserGroup(group groups.UserGroup) gin.HandlerFunc {
 		isGroup, err := groups.CheckUserGroup(userId, group)
 		if err != nil {
 			log.Println(err)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred", "error": true})
 			c.Abort()
 			return
 		}
 
 		if isGroup {
-			c.JSON(http.StatusForbidden, gin.H{"message": "Not enough permissions to view this site", "error": true})
+			c.JSON(http.StatusForbidden, gin.H{"msg": "Not enough permissions", "error": true})
 			c.Abort()
 			return
 		} else {
