@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -26,7 +27,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			authors, err := operations.GetAllAuthors(database.MongoDB)
+			authors, err := operations.GetAll[models.Author](database.Tables.Author)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -55,7 +56,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			author, err := operations.GetAuthorById(database.MongoDB, objID)
+			author, err := operations.GetOneById[models.Author](database.Tables.Author, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
@@ -97,7 +98,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the author already exists
-			_, err = operations.GetAuthorByName(database.MongoDB, requestBody.Name)
+			_, err = operations.GetOneByFilter[models.Author](database.Tables.Author, primitive.M{"name": requestBody.Name})
 			if err == nil { // err == nil in case the author already exists
 				log.Println(err)
 				c.JSON(http.StatusConflict, gin.H{"msg": "This author already exists", "error": true})
@@ -124,7 +125,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 			newAuthor.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newAuthor.CreatedBy = currentUser
 
-			err = operations.InsertAuthor(database.MongoDB, newAuthor)
+			_, err = operations.InsertOne(database.Tables.Author, newAuthor)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -186,14 +187,14 @@ func AuthorHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the author exists
-			_, err = operations.GetAuthorById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Author](database.Tables.Author, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
 				return
 			}
 
-			result, err := operations.UpdateAuthor(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.Author, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -224,14 +225,14 @@ func AuthorHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the author exists
-			_, err = operations.GetAuthorById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Author](database.Tables.Author, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
 				return
 			}
 
-			_, err = operations.DeleteAuthor(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.Author, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

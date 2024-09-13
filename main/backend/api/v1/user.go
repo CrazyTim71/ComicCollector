@@ -12,6 +12,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -31,7 +32,7 @@ func UserHandler(rg *gin.RouterGroup) {
 		),
 		func(c *gin.Context) {
 			// returns all users
-			users, err := operations.GetAllUsers(database.MongoDB)
+			users, err := operations.GetAll[models.User](database.Tables.User)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -80,7 +81,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			user, err := operations.GetUserById(database.MongoDB, objID)
+			user, err := operations.GetOneById[models.User](database.Tables.User, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "User not found", "error": true})
@@ -168,7 +169,7 @@ func UserHandler(rg *gin.RouterGroup) {
 
 				// check if the username was changed
 				usernameChanged := false
-				existingUser, err := operations.GetUserById(database.MongoDB, objID)
+				existingUser, err := operations.GetOneById[models.User](database.Tables.User, objID)
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -179,7 +180,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				// check if the user already exists in the database by querying with the username
-				_, err = operations.GetUserByUsername(database.MongoDB, username)
+				_, err = operations.GetOneByFilter[models.User](database.Tables.User, primitive.M{"username": username})
 				if err == nil { // err == nil in case the user already exists
 					// only show the error when the username was changed
 					// otherwise its logical that the user already exists
@@ -211,28 +212,25 @@ func UserHandler(rg *gin.RouterGroup) {
 					return
 				}
 
-				var newUser models.User
-				newUser.ID = existingUser.ID
-				newUser.Username = username
-				newUser.Password = hashedPW
-				newUser.CreatedAt = existingUser.CreatedAt
-				newUser.UpdatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
-				newUser.UpdatedBy = currentUser
+				updateData := bson.M{
+					"username":   username,
+					"password":   hashedPW,
+					"updated_at": utils.ConvertToDateTime(time.DateTime, time.Now()),
+					"updated_by": currentUser,
+				}
 
 				// check the user roles
 				if requestBody.Roles != nil && len(requestBody.Roles) > 0 && !utils.ContainsNilObjectID(requestBody.Roles) {
 					// check if the roles exist
-					if !operations.CheckIfAllRolesExist(database.MongoDB, requestBody.Roles) {
+					if !operations.CheckIfAllIdsExist[models.Role](database.Tables.Role, requestBody.Roles) {
 						log.Println("Not all provided role ids exist/are valid")
 						c.JSON(http.StatusBadRequest, gin.H{"msg": "Not all provided role ids exist/are valid", "error": true})
 						return
 					}
-					newUser.Roles = requestBody.Roles
-				} else {
-					newUser.Roles = existingUser.Roles
+					updateData["roles"] = requestBody.Roles
 				}
 
-				result, err := operations.UpdateUser(database.MongoDB, objID, newUser)
+				result, err := operations.UpdateOne(database.Tables.User, objID, updateData)
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -285,7 +283,7 @@ func UserHandler(rg *gin.RouterGroup) {
 				}
 
 				// delete the user
-				_, err = operations.DeleteUser(database.MongoDB, objID)
+				_, err = operations.DeleteOne(database.Tables.User, bson.M{"_id": objID})
 				if err != nil {
 					log.Println(err)
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

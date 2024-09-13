@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -27,7 +28,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			roles, err := operations.GetAllRoles(database.MongoDB)
+			roles, err := operations.GetAll[models.Role](database.Tables.Role)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -57,7 +58,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			role, err := operations.GetRoleById(database.MongoDB, objID)
+			role, err := operations.GetOneById[models.Role](database.Tables.Role, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Role not found", "error": true})
@@ -102,7 +103,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the role already exists
-			_, err = operations.GetRoleByName(database.MongoDB, requestBody.Name)
+			_, err = operations.GetOneByFilter[models.Role](database.Tables.Role, bson.M{"name": requestBody.Name})
 			if err == nil {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Role already exists", "error": true})
 				return
@@ -115,7 +116,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the permissions exist
-			if !operations.CheckIfAllPermissionsExist(database.MongoDB, requestBody.Permissions) {
+			if !operations.CheckIfAllIdsExist[models.Permission](database.Tables.Permission, requestBody.Permissions) {
 				log.Println("Not all provided permission ids exist/are valid")
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Not all provided permission ids exist/are valid", "error": true})
 				return
@@ -136,7 +137,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			newRole.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newRole.CreatedBy = currentUser
 
-			err = operations.InsertRole(database.MongoDB, newRole)
+			_, err = operations.InsertOne(database.Tables.Role, newRole)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -200,7 +201,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the role already exists
-			_, err = operations.GetRoleById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Role](database.Tables.Role, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Role not found", "error": true})
@@ -208,7 +209,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			}
 
 			// update the role
-			result, err := operations.UpdateRole(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.Role, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -240,7 +241,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the role exists
-			_, err = operations.GetRoleById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Role](database.Tables.Role, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Role not found", "error": true})
@@ -248,7 +249,7 @@ func RoleHandler(rg *gin.RouterGroup) {
 			}
 
 			// delete the role
-			_, err = operations.DeleteRole(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.Role, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

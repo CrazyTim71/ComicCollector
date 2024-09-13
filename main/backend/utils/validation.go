@@ -158,7 +158,7 @@ func CleanEmptyFields(data interface{}) bson.M {
 			continue
 		}
 
-		if fieldType.Elem().Kind() == reflect.Uint8 { // Check for []byte
+		if fieldType.Kind() == reflect.Uint8 { // Check for []byte
 			if len(field.Interface().([]byte)) != 0 {
 				result[fieldName] = field.Interface()
 			}

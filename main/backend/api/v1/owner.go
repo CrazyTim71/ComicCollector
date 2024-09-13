@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -26,7 +27,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			owners, err := operations.GetAllOwners(database.MongoDB)
+			owners, err := operations.GetAll[models.Owner](database.Tables.Owner)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -55,7 +56,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			owner, err := operations.GetOwnerById(database.MongoDB, objID)
+			owner, err := operations.GetOneById[models.Owner](database.Tables.Owner, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Owner not found", "error": true})
@@ -98,7 +99,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the owner already exists
-			_, err = operations.GetOwnerByName(database.MongoDB, requestBody.Name)
+			_, err = operations.GetOneByFilter[models.Owner](database.Tables.Owner, bson.M{"name": requestBody.Name})
 			if err == nil {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Owner already exists", "error": true})
 				return
@@ -124,7 +125,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 			newOwner.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newOwner.CreatedBy = currentUser
 
-			err = operations.InsertOwner(database.MongoDB, newOwner)
+			_, err = operations.InsertOne(database.Tables.Owner, newOwner)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -186,7 +187,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the owner already exists
-			_, err = operations.GetOwnerById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Owner](database.Tables.Owner, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Owner not found", "error": true})
@@ -194,7 +195,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 			}
 
 			// update the owner
-			result, err := operations.UpdateOwner(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.Owner, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -225,7 +226,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the owner exists
-			_, err = operations.GetOwnerById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Owner](database.Tables.Owner, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Owner not found", "error": true})
@@ -233,7 +234,7 @@ func OwnerHandler(rg *gin.RouterGroup) {
 			}
 
 			// delete the owner
-			_, err = operations.DeleteOwner(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.Owner, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

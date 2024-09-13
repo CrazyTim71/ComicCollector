@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -28,7 +29,7 @@ func BookHandler(rg *gin.RouterGroup) {
 		),
 		func(c *gin.Context) {
 			// returns all books
-			books, err := operations.GetAllBooks(database.MongoDB)
+			books, err := operations.GetAll[models.Book](database.Tables.Book)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -56,7 +57,7 @@ func BookHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			book, err := operations.GetBookById(database.MongoDB, objID)
+			book, err := operations.GetOneById[models.Book](database.Tables.Book, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Author not found", "error": true})
@@ -119,7 +120,7 @@ func BookHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the book already exists
-			_, err = operations.GetBookByTitle(database.MongoDB, requestBody.Title)
+			_, err = operations.GetOneByFilter[models.Book](database.Tables.Book, bson.M{"title": requestBody.Title, "number": requestBody.Number})
 			if err == nil { // err == nil in case the book already exists
 				log.Println(err)
 				c.JSON(http.StatusConflict, gin.H{"msg": "This book already exists", "error": true})
@@ -160,7 +161,7 @@ func BookHandler(rg *gin.RouterGroup) {
 			newBook.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newBook.CreatedBy = currentUser
 
-			err = operations.InsertBook(database.MongoDB, newBook)
+			_, err = operations.InsertOne(database.Tables.Book, newBook)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -235,14 +236,14 @@ func BookHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the book exists
-			_, err = operations.GetBookById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Book](database.Tables.Book, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusNotFound, gin.H{"msg": "Book not found", "error": true})
 				return
 			}
 
-			result, err := operations.UpdateBook(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.Book, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -272,7 +273,7 @@ func BookHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the book exists
-			book, err := operations.GetBookById(database.MongoDB, objID)
+			book, err := operations.GetOneById[models.Book](database.Tables.Book, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Book not found", "error": true})
@@ -294,7 +295,7 @@ func BookHandler(rg *gin.RouterGroup) {
 			}
 
 			// delete the book
-			_, err = operations.DeleteBook(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.Book, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

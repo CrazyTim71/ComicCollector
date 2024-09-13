@@ -12,6 +12,7 @@ import (
 	"ComicCollector/main/backend/utils/env"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -64,7 +65,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		password := requestBody.Password
 
 		// check if the user already exists in the database by querying with the username
-		_, err := operations.GetUserByUsername(database.MongoDB, username)
+		_, err := operations.GetOneByFilter[models.User]("users", bson.M{"username": username})
 		if err == nil { // err == nil in case the user already exists
 			log.Println(err)
 			c.JSON(http.StatusConflict, gin.H{"msg": "This username already exists", "error": true})
@@ -119,7 +120,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		// add the role to the user
 		newUser.Roles = append(newUser.Roles, restrictedUserRole.ID)
 
-		err = operations.InsertUser(database.MongoDB, newUser)
+		_, err = operations.InsertOne(database.Tables.User, newUser)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

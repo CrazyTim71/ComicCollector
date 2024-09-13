@@ -17,7 +17,7 @@ func TestHandler(rg *gin.RouterGroup) {
 
 	rg.GET("admin",
 		middleware.CheckJwtToken(),
-		middleware.VerifyUserGroup(groups.Administrator), // TODO: test this
+		middleware.VerifyUserGroup(groups.Administrator),
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"message": "Hello, Admin!",

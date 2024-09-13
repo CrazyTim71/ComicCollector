@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/crypt"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
+	"time"
 )
 
 func CheckJwtToken() gin.HandlerFunc {
@@ -52,7 +54,7 @@ func CheckJwtToken() gin.HandlerFunc {
 		}
 
 		// check if user exists
-		_, err = operations.GetUserById(database.MongoDB, userId)
+		_, err = operations.GetOneById[models.User](database.Tables.User, userId)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				log.Println(err)
@@ -64,15 +66,15 @@ func CheckJwtToken() gin.HandlerFunc {
 		}
 
 		// check if the token is still valid
-		if jwtToken["exp"] == nil {
-			c.SetCookie("auth_token", "", -1, "/", "", false, true)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
-		if jwtToken["exp"].(float64) < jwtToken["iat"].(float64) {
-			// TODO: redirect to login ?
+		if exp, ok := jwtToken["exp"].(float64); ok {
+			if time.Now().Unix() > int64(exp) {
+				// TODO: redirect to login ?
+				c.SetCookie("auth_token", "", -1, "/", "", false, true)
+				c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
+				c.Abort()
+				return
+			}
+		} else {
 			c.SetCookie("auth_token", "", -1, "/", "", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
 			c.Abort()

@@ -36,7 +36,7 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 		}
 
 		// check if user exists
-		user, err := operations.GetUserById(database.MongoDB, userId)
+		user, err := operations.GetOneById[models.User](database.Tables.User, userId)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				log.Println(err)
@@ -98,7 +98,7 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 		}
 
 		// check if user exists
-		user, err := operations.GetUserById(database.MongoDB, userId)
+		user, err := operations.GetOneById[models.User](database.Tables.User, userId)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				log.Println(err)
