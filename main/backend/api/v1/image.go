@@ -46,7 +46,7 @@ func mimeFromIncipit(incipit []byte) string {
 
 func ImageHandler(rg *gin.RouterGroup) {
 	rg.GET("/cover/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -75,7 +75,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.POST("/cover/:bookid",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -213,7 +213,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 	rg.PATCH("/cover/:bookid")
 
 	rg.DELETE("/cover/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,

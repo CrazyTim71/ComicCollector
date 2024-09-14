@@ -104,9 +104,9 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 	})
 
-	r.GET("/dashboard", middleware.CheckJwtToken(), func(c *gin.Context) {
+	r.GET("/dashboard", middleware.JWTAuth(), func(c *gin.Context) {
 		// get the userId
-		// because of middleware.CheckJwtToken() we can safely assume that the user id logged in
+		// because of middleware.JWTAuth() we can safely assume that the user id logged in
 		userId, err := webcontext.GetUserId(c)
 		if err != nil {
 			log.Println(err)
@@ -150,7 +150,7 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 	})
 
-	r.GET("/bookmanager", middleware.CheckJwtToken(), func(c *gin.Context) {
+	r.GET("/bookmanager", middleware.JWTAuth(), func(c *gin.Context) {
 		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,

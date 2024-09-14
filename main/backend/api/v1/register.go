@@ -65,7 +65,7 @@ func RegisterHandler(rg *gin.RouterGroup) {
 		password := requestBody.Password
 
 		// check if the user already exists in the database by querying with the username
-		_, err := operations.GetOneByFilter[models.User]("users", bson.M{"username": username})
+		_, err := operations.GetOneByFilter[models.User](database.Tables.User, bson.M{"username": username})
 		if err == nil { // err == nil in case the user already exists
 			log.Println(err)
 			c.JSON(http.StatusConflict, gin.H{"msg": "This username already exists", "error": true})

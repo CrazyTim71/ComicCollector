@@ -21,7 +21,7 @@ import (
 
 func AuthorHandler(rg *gin.RouterGroup) {
 	rg.GET("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -42,7 +42,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.GET("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -71,7 +71,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.POST("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -136,7 +136,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.PATCH("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -209,7 +209,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.DELETE("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,

@@ -26,7 +26,7 @@ func UserHandler(rg *gin.RouterGroup) {
 	// rg.POST() to create a new user is done in register.go
 
 	rg.GET("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.VerifyHasAllPermission(
 			permissions.UserViewAll,
 		),
@@ -47,7 +47,7 @@ func UserHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.GET("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		func(c *gin.Context) {
 			id := c.Param("id")
 
@@ -96,7 +96,7 @@ func UserHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.PATCH("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		func(c *gin.Context) {
 			{
 				id := c.Param("id")
@@ -247,7 +247,7 @@ func UserHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.DELETE("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		func(c *gin.Context) {
 			{
 				id := c.Param("id")
