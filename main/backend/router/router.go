@@ -3,6 +3,7 @@ package router
 import (
 	v1 "ComicCollector/main/backend/api/v1"
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
@@ -103,9 +104,9 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 	})
 
-	r.GET("/dashboard", middleware.CheckJwtToken(), func(c *gin.Context) {
+	r.GET("/dashboard", middleware.JWTAuth(), func(c *gin.Context) {
 		// get the userId
-		// because of middleware.CheckJwtToken() we can safely assume that the user id logged in
+		// because of middleware.JWTAuth() we can safely assume that the user id logged in
 		userId, err := webcontext.GetUserId(c)
 		if err != nil {
 			log.Println(err)
@@ -122,7 +123,7 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 
 		// get the username
-		user, err := operations.GetUserById(database.MongoDB, userId)
+		user, err := operations.GetOneById[models.User](database.Tables.User, userId)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred while rendering the templateSite", "error": true})
@@ -149,7 +150,7 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 		}
 	})
 
-	r.GET("/bookmanager", middleware.CheckJwtToken(), func(c *gin.Context) {
+	r.GET("/bookmanager", middleware.JWTAuth(), func(c *gin.Context) {
 		templateSite := template.Must(
 			template.ParseFS(
 				env.Files,

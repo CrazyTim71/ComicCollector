@@ -1,192 +1,200 @@
 package permissions
 
 type Permission struct {
-	Name        string
-	Description string
+	name        string
+	description string
+}
+
+func (p Permission) Name() string {
+	return p.name
+}
+
+func (p Permission) Description() string {
+	return p.description
 }
 
 var (
 	BasicApiAccess = Permission{
-		Name:        "basic:ApiAccess",
-		Description: "Gives an user the ability to request data from the api endpoints",
+		name:        "basic:ApiAccess",
+		description: "Gives an user the ability to request data from the api endpoints",
 	}
 )
 
 var (
 	UserViewSelf = Permission{
-		Name:        "user:viewSelf",
-		Description: "Allows a user to view their own information",
+		name:        "user:viewSelf",
+		description: "Allows a user to view their own information",
 	}
 	UserViewAll = Permission{
-		Name:        "user:viewAll",
-		Description: "Allows viewing all user information (admin only)",
+		name:        "user:viewAll",
+		description: "Allows viewing all user information (admin only)",
 	}
 
 	UserModifySelf = Permission{
-		Name:        "user:modifySelf",
-		Description: "Allows a user to modify their own user information",
+		name:        "user:modifySelf",
+		description: "Allows a user to modify their own user information",
 	}
 	UserModifyAll = Permission{
-		Name:        "user:modifyAll",
-		Description: "Allows modifying all user information (admin only)",
+		name:        "user:modifyAll",
+		description: "Allows modifying all user information (admin only)",
 	}
 
 	UserDeleteSelf = Permission{
-		Name:        "user:deleteSelf",
-		Description: "Allows a user to delete their own account",
+		name:        "user:deleteSelf",
+		description: "Allows a user to delete their own account",
 	}
 	UserDeleteAll = Permission{
-		Name:        "user:deleteAll",
-		Description: "Allows deleting all user accounts (admin only)",
+		name:        "user:deleteAll",
+		description: "Allows deleting all user accounts (admin only)",
 	}
 
 	UserCreate = Permission{
-		Name:        "user:create",
-		Description: "Allows creating a new user",
+		name:        "user:create",
+		description: "Allows creating a new user",
 	}
 )
 
 var (
 	BookCreate = Permission{
-		Name:        "book:create",
-		Description: "Allows creating a new book",
+		name:        "book:create",
+		description: "Allows creating a new book",
 	}
 	BookModify = Permission{
-		Name:        "book:modify",
-		Description: "Allows modifying book information",
+		name:        "book:modify",
+		description: "Allows modifying book information",
 	}
 	BookDelete = Permission{
-		Name:        "book:delete",
-		Description: "Allows deleting a book",
+		name:        "book:delete",
+		description: "Allows deleting a book",
 	}
 )
 
 var (
 	AuthorCreate = Permission{
-		Name:        "author:create",
-		Description: "Allows creating a new author",
+		name:        "author:create",
+		description: "Allows creating a new author",
 	}
 	AuthorModify = Permission{
-		Name:        "author:modify",
-		Description: "Allows modifying author information",
+		name:        "author:modify",
+		description: "Allows modifying author information",
 	}
 	AuthorDelete = Permission{
-		Name:        "author:delete",
-		Description: "Allows deleting an author",
+		name:        "author:delete",
+		description: "Allows deleting an author",
 	}
 )
 
 var (
 	BookEditionCreate = Permission{
-		Name:        "bookEdition:create",
-		Description: "Allows creating a new book edition",
+		name:        "bookEdition:create",
+		description: "Allows creating a new book edition",
 	}
 	BookEditionModify = Permission{
-		Name:        "bookEdition:modify",
-		Description: "Allows modifying book edition information",
+		name:        "bookEdition:modify",
+		description: "Allows modifying book edition information",
 	}
 	BookEditionDelete = Permission{
-		Name:        "bookEdition:delete",
-		Description: "Allows deleting a book edition",
+		name:        "bookEdition:delete",
+		description: "Allows deleting a book edition",
 	}
 )
 
 var (
 	BookTypeCreate = Permission{
-		Name:        "bookType:create",
-		Description: "Allows creating a new book type",
+		name:        "bookType:create",
+		description: "Allows creating a new book type",
 	}
 	BookTypeModify = Permission{
-		Name:        "bookType:modify",
-		Description: "Allows modifying book type information",
+		name:        "bookType:modify",
+		description: "Allows modifying book type information",
 	}
 	BookTypeDelete = Permission{
-		Name: "bookType:delete",
+		name: "bookType:delete",
 	}
 )
 
 var (
 	LocationCreate = Permission{
-		Name:        "location:create",
-		Description: "Allows creating a new location",
+		name:        "location:create",
+		description: "Allows creating a new location",
 	}
 	LocationModify = Permission{
-		Name:        "location:modify",
-		Description: "Allows modifying location information",
+		name:        "location:modify",
+		description: "Allows modifying location information",
 	}
 	LocationDelete = Permission{
-		Name:        "location:delete",
-		Description: "Allows deleting a location",
+		name:        "location:delete",
+		description: "Allows deleting a location",
 	}
 )
 
 var (
 	OwnerCreate = Permission{
-		Name:        "owner:create",
-		Description: "Allows creating a new owner",
+		name:        "owner:create",
+		description: "Allows creating a new owner",
 	}
 	OwnerModify = Permission{
-		Name:        "owner:modify",
-		Description: "Allows modifying owner information",
+		name:        "owner:modify",
+		description: "Allows modifying owner information",
 	}
 	OwnerDelete = Permission{
-		Name:        "owner:delete",
-		Description: "Allows deleting an owner",
+		name:        "owner:delete",
+		description: "Allows deleting an owner",
 	}
 )
 
 var (
 	PermissionCreate = Permission{
-		Name:        "permission:create",
-		Description: "Allows creating a new permission",
+		name:        "permission:create",
+		description: "Allows creating a new permission",
 	}
 	PermissionModify = Permission{
-		Name:        "permission:modify",
-		Description: "Allows modifying permission information",
+		name:        "permission:modify",
+		description: "Allows modifying permission information",
 	}
 	PermissionDelete = Permission{
-		Name:        "permission:delete",
-		Description: "Allows deleting a permission",
+		name:        "permission:delete",
+		description: "Allows deleting a permission",
 	}
 )
 
 var (
 	PublisherCreate = Permission{
-		Name:        "publisher:create",
-		Description: "Allows creating a new publisher",
+		name:        "publisher:create",
+		description: "Allows creating a new publisher",
 	}
 	PublisherModify = Permission{
-		Name:        "publisher:modify",
-		Description: "Allows modifying publisher information",
+		name:        "publisher:modify",
+		description: "Allows modifying publisher information",
 	}
 	PublisherDelete = Permission{
-		Name:        "publisher:delete",
-		Description: "Allows deleting a publisher",
+		name:        "publisher:delete",
+		description: "Allows deleting a publisher",
 	}
 )
 
 var (
 	RoleCreate = Permission{
-		Name:        "role:create",
-		Description: "Allows creating a new role",
+		name:        "role:create",
+		description: "Allows creating a new role",
 	}
 	RoleModify = Permission{
-		Name:        "role:modify",
-		Description: "Allows modifying role information",
+		name:        "role:modify",
+		description: "Allows modifying role information",
 	}
 	RoleDelete = Permission{
-		Name:        "role:delete",
-		Description: "Allows deleting a role",
+		name:        "role:delete",
+		description: "Allows deleting a role",
 	}
 )
 
 var (
 	CoverUpload = Permission{
-		Name:        "cover:upload",
-		Description: "Allows uploading a cover image",
+		name:        "cover:upload",
+		description: "Allows uploading a cover image",
 	}
 	CoverDelete = Permission{
-		Name:        "cover:delete",
-		Description: "Allows deleting a cover image",
+		name:        "cover:delete",
+		description: "Allows deleting a cover image",
 	}
 )

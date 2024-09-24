@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/crypt"
 	"errors"
@@ -10,78 +11,90 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
+	"time"
 )
 
-func CheckJwtToken() gin.HandlerFunc {
+type JwtCheck struct {
+	ErrorCode int
+	Message   string
+	Abort     bool
+}
+
+// JWTAuth is a middleware that checks if the user is logged in
+func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// check if the token exists
-		tokenString, err := c.Cookie("auth_token")
-		if err != nil {
-			//log.Println("The auth_token is missing in the cookie")
-			c.Redirect(http.StatusSeeOther, "/login")
-			c.Abort()
-			return
-		}
-
-		if tokenString == "" {
-			log.Println("The auth_token is empty")
+		check := CheckJWT(c)
+		if check.Abort {
 			c.SetCookie("auth_token", "", -1, "/", "", false, true)
-			c.Redirect(http.StatusSeeOther, "/login")
+			c.JSON(check.ErrorCode, gin.H{"msg": check.Message, "error": true})
 			c.Abort()
-			return
+		} else {
+			c.Next()
 		}
+	}
+}
 
-		// parse the token
-		jwtToken, err := crypt.ParseJwt(tokenString)
-		if err != nil {
+// CheckJWT checks if the JWT token is valid and if the user is logged in
+func CheckJWT(c *gin.Context) JwtCheck {
+	unauthorizedError := JwtCheck{
+		ErrorCode: http.StatusUnauthorized,
+		Message:   "Unauthorized",
+		Abort:     true,
+	}
+
+	// check if the token exists
+	tokenString, err := c.Cookie("auth_token")
+	if err != nil {
+		log.Println("The auth_token is missing in the cookie")
+		return unauthorizedError
+	}
+
+	if tokenString == "" {
+		log.Println("The auth_token is empty")
+		return unauthorizedError
+	}
+
+	// parse the token to check the claims and the signature
+	jwtToken, err := crypt.ParseJwt(tokenString)
+	if err != nil {
+		log.Println(err)
+		return unauthorizedError
+	}
+
+	// get the userId from the jwtToken
+	userId, err := primitive.ObjectIDFromHex(jwtToken["userId"].(string))
+	if err != nil {
+		log.Println(err)
+		return unauthorizedError
+	}
+
+	// check if user exists
+	user, err := operations.GetOneById[models.User](database.Tables.User, userId)
+	if err != nil {
+		if !errors.Is(err, mongo.ErrNoDocuments) {
 			log.Println(err)
-			c.SetCookie("auth_token", "", -1, "/", "", false, true)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
 		}
+		return unauthorizedError
+	}
 
-		// get the userId from the jwtToken
-		userId, err := primitive.ObjectIDFromHex(jwtToken["userId"].(string))
-		if err != nil {
-			log.Println(err)
-			c.SetCookie("auth_token", "", -1, "/", "", false, true)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
+	// check if the token is still valid
+	exp, ok := jwtToken["exp"].(float64)
+	if !ok {
+		return unauthorizedError
+	}
 
-		// check if user exists
-		_, err = operations.GetUserById(database.MongoDB, userId)
-		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
-				log.Println(err)
-			}
-			c.SetCookie("auth_token", "", -1, "/", "", false, true)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
+	if time.Now().Unix() > int64(exp) {
+		return unauthorizedError
+	}
 
-		// check if the token is still valid
-		if jwtToken["exp"] == nil {
-			c.SetCookie("auth_token", "", -1, "/", "", false, true)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
+	// update the context
+	c.Set("user", user)
+	c.Set("userId", jwtToken["userId"])
+	c.Set("loggedIn", true)
 
-		if jwtToken["exp"].(float64) < jwtToken["iat"].(float64) {
-			// TODO: redirect to login ?
-			c.SetCookie("auth_token", "", -1, "/", "", false, true)
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
-			c.Abort()
-			return
-		}
-
-		// update the context
-		c.Set("userId", jwtToken["userId"])
-		c.Set("loggedIn", true)
-		c.Next()
+	return JwtCheck{
+		ErrorCode: 0,
+		Message:   "Authorized",
+		Abort:     false,
 	}
 }

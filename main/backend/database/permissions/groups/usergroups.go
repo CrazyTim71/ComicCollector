@@ -2,6 +2,7 @@ package groups
 
 import (
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions"
 	"errors"
@@ -137,7 +138,7 @@ var (
 
 func CheckUserGroup(userID primitive.ObjectID, group UserGroup) (bool, error) {
 	// check if user exists
-	user, err := operations.GetUserById(database.MongoDB, userID)
+	user, err := operations.GetOneById[models.User](database.Tables.User, userID)
 	if err != nil {
 		if !errors.Is(err, mongo.ErrNoDocuments) {
 			log.Println(err)
@@ -149,7 +150,7 @@ func CheckUserGroup(userID primitive.ObjectID, group UserGroup) (bool, error) {
 	isUserInGroup := false
 	for _, roleId := range user.Roles {
 		// get single role
-		role, err := operations.GetRoleById(database.MongoDB, roleId)
+		role, err := operations.GetOneById[models.Role](database.Tables.Role, roleId)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				log.Println(err)

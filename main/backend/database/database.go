@@ -14,6 +14,34 @@ import (
 var MongoDB *mongo.Database
 var CoverBucket *gridfs.Bucket
 
+type TableStruct struct {
+	Author      string
+	Book        string
+	BookEdition string
+	BookType    string
+	Image       string
+	Location    string
+	Owner       string
+	Permission  string
+	Publisher   string
+	Role        string
+	User        string
+}
+
+var Tables = TableStruct{
+	Author:      "author",
+	Book:        "book",
+	BookEdition: "book_edition",
+	BookType:    "book_type",
+	Image:       "image",
+	Location:    "location",
+	Owner:       "owner",
+	Permission:  "permission",
+	Publisher:   "publisher",
+	Role:        "role",
+	User:        "user",
+}
+
 func InitDatabase() bool {
 	uri := env.GetDatabaseURI()
 	if uri == "" {

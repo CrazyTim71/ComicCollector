@@ -36,7 +36,7 @@ func PerformFirstRunTasks() error {
 	// create the user permissions
 	var userPermissionIds []primitive.ObjectID
 	for _, permission := range groups.User.Permissions {
-		perm, err := helpers.CreatePermission(permission.Name, permission.Description)
+		perm, err := helpers.CreatePermission(permission.Name(), permission.Description())
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func PerformFirstRunTasks() error {
 	// create the admin permissions
 	var adminPermissionIds []primitive.ObjectID
 	for _, permission := range groups.Administrator.Permissions {
-		perm, err := helpers.CreatePermission(permission.Name, permission.Description)
+		perm, err := helpers.CreatePermission(permission.Name(), permission.Description())
 		if err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ func PerformFirstRunTasks() error {
 	// create the restricted permissions
 	var restrictedPermissionIds []primitive.ObjectID
 	for _, permission := range groups.RestrictedUser.Permissions {
-		perm, err := helpers.CreatePermission(permission.Name, permission.Description)
+		perm, err := helpers.CreatePermission(permission.Name(), permission.Description())
 		if err != nil {
 			return err
 		}
@@ -81,17 +81,17 @@ func PerformFirstRunTasks() error {
 	NormalUser.Roles = append(NormalUser.Roles, normalRole.ID)
 	RestrictedUser.Roles = append(RestrictedUser.Roles, restrictedRole.ID)
 
-	err = operations.InsertUser(database.MongoDB, AdminUser)
+	_, err = operations.InsertOne(database.Tables.User, AdminUser)
 	if err != nil {
 		return err
 	}
 
-	err = operations.InsertUser(database.MongoDB, NormalUser)
+	_, err = operations.InsertOne(database.Tables.User, NormalUser)
 	if err != nil {
 		return err
 	}
 
-	err = operations.InsertUser(database.MongoDB, RestrictedUser)
+	_, err = operations.InsertOne(database.Tables.User, RestrictedUser)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func createNoDataEntities() error {
 	NoAuthor.Description = "This author is used for books without an author"
 	NoAuthor.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err := operations.InsertAuthor(database.MongoDB, NoAuthor)
+	_, err := operations.InsertOne(database.Tables.Author, NoAuthor)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func createNoDataEntities() error {
 	NoPublisher.WebsiteURL = "https://narnia.com"
 	NoPublisher.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err = operations.InsertPublisher(database.MongoDB, NoPublisher)
+	_, err = operations.InsertOne(database.Tables.Publisher, NoPublisher)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func createNoDataEntities() error {
 	NoLocation.Description = "This location is used for books without a location"
 	NoLocation.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err = operations.InsertLocation(database.MongoDB, NoLocation)
+	_, err = operations.InsertOne(database.Tables.Location, NoLocation)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func createNoDataEntities() error {
 	NoOwner.Description = "This owner is used for books without an owner"
 	NoOwner.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err = operations.InsertOwner(database.MongoDB, NoOwner)
+	_, err = operations.InsertOne(database.Tables.Owner, NoOwner)
 
 	if err != nil {
 		return err
@@ -227,7 +227,7 @@ func createNoDataEntities() error {
 	NoBookEdition.Description = "This edition is used for books without an edition"
 	NoBookEdition.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err = operations.InsertBookEdition(database.MongoDB, NoBookEdition)
+	_, err = operations.InsertOne(database.Tables.BookEdition, NoBookEdition)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func createNoDataEntities() error {
 	NoBookType.Description = "This type is used for books without a type"
 	NoBookType.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
-	err = operations.InsertBookType(database.MongoDB, NoBookType)
+	_, err = operations.InsertOne(database.Tables.BookType, NoBookType)
 	if err != nil {
 		return err
 	}

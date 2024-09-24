@@ -2,10 +2,12 @@ package v1
 
 import (
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
 	"strings"
@@ -44,7 +46,7 @@ func LoginHandler(rg *gin.RouterGroup) {
 		password := requestBody.Password
 
 		// check if the user exists
-		existingUser, err := operations.GetUserByUsername(database.MongoDB, username)
+		existingUser, err := operations.GetOneByFilter[models.User](database.Tables.User, bson.M{"username": username})
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Invalid credentials", "error": true})
 			log.Println(err)

@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -20,13 +21,13 @@ import (
 
 func BookEditionHandler(rg *gin.RouterGroup) {
 	rg.GET("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			bookEditions, err := operations.GetAllBookEditions(database.MongoDB)
+			bookEditions, err := operations.GetAll[models.BookEdition](database.Tables.BookEdition)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -41,7 +42,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.GET("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -55,7 +56,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			bookEdition, err := operations.GetBookEditionById(database.MongoDB, objID)
+			bookEdition, err := operations.GetOneById[models.BookEdition](database.Tables.BookEdition, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Book edition not found", "error": true})
@@ -70,7 +71,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.POST("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -98,7 +99,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the book edition already exists
-			_, err = operations.GetBookEditionByName(database.MongoDB, requestBody.Name)
+			_, err = operations.GetOneByFilter[models.BookEdition](database.Tables.BookEdition, bson.M{"name": requestBody.Name})
 			if err == nil {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book edition already exists", "error": true})
 				return
@@ -124,7 +125,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 			newBookEdition.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newBookEdition.CreatedBy = currentUser
 
-			err = operations.InsertBookEdition(database.MongoDB, newBookEdition)
+			_, err = operations.InsertOne(database.Tables.BookEdition, newBookEdition)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -135,7 +136,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.PATCH("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -186,7 +187,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the book edition already exists
-			_, err = operations.GetBookEditionById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.BookEdition](database.Tables.BookEdition, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book edition doesn't exist", "error": true})
@@ -194,7 +195,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 			}
 
 			// update the book edition
-			result, err := operations.UpdateBookEdition(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.BookEdition, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -209,7 +210,7 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.DELETE("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -225,14 +226,14 @@ func BookEditionHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the book edition already exists
-			_, err = operations.GetBookEditionById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.BookEdition](database.Tables.BookEdition, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Book edition doesn't exist", "error": true})
 				return
 			}
 
-			_, err = operations.DeleteBookEdition(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.BookEdition, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

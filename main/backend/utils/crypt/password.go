@@ -8,7 +8,7 @@ import (
 
 const (
 	letters      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	specialChars = "._!?#"
+	specialChars = "._!?"
 	numbers      = "0123456789"
 )
 

@@ -5,6 +5,7 @@ import (
 	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -19,12 +20,12 @@ func CreatePermission(name string, description string) (models.Permission, error
 	permission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	// check if permission already exists
-	existingPermission, err := operations.GetPermissionByName(database.MongoDB, permission.Name)
+	existingPermission, err := operations.GetOneByFilter[models.Permission](database.Tables.Permission, bson.M{"name": permission.Name})
 	if err == nil {
 		return existingPermission, nil
 	}
 
-	err = operations.InsertPermission(database.MongoDB, permission)
+	_, err = operations.InsertOne(database.Tables.Permission, permission)
 	if err != nil {
 		return permission, err
 	}
@@ -42,12 +43,12 @@ func CreateRole(db *mongo.Database, name string, description string, permissions
 	role.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 
 	// check if the role already exists
-	existingRole, err := operations.GetRoleByName(db, name)
+	existingRole, err := operations.GetOneByFilter[models.Role](database.Tables.Role, bson.M{"name": role.Name})
 	if err == nil {
 		return existingRole, nil
 	}
 
-	err = operations.InsertRole(database.MongoDB, role)
+	_, err = operations.InsertOne(database.Tables.Role, role)
 
 	return role, err
 }

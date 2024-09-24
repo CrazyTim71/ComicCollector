@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -20,13 +21,13 @@ import (
 
 func PublisherHandler(rg *gin.RouterGroup) {
 	rg.GET("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			publishers, err := operations.GetAllPublishers(database.MongoDB)
+			publishers, err := operations.GetAll[models.Publisher](database.Tables.Publisher)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -41,7 +42,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.GET("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -55,7 +56,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			publisher, err := operations.GetPublisherById(database.MongoDB, objID)
+			publisher, err := operations.GetOneById[models.Publisher](database.Tables.Publisher, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Publisher not found", "error": true})
@@ -70,7 +71,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.POST("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -100,7 +101,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the publisher already exists
-			_, err = operations.GetPublisherByName(database.MongoDB, requestBody.Name)
+			_, err = operations.GetOneByFilter[models.Publisher](database.Tables.Publisher, bson.M{"name": requestBody.Name})
 			if err == nil {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Publisher already exists", "error": true})
 				return
@@ -128,7 +129,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 			newPublisher.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newPublisher.CreatedBy = currentUser
 
-			err = operations.InsertPublisher(database.MongoDB, newPublisher)
+			_, err = operations.InsertOne(database.Tables.Publisher, newPublisher)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -139,7 +140,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.PATCH("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -192,7 +193,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the publisher already exists
-			_, err = operations.GetPublisherById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Publisher](database.Tables.Publisher, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Publisher not found", "error": true})
@@ -200,7 +201,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 			}
 
 			// update the publisher
-			result, err := operations.UpdatePublisher(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.Publisher, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -216,7 +217,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.DELETE("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -232,7 +233,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the publisher exists
-			_, err = operations.GetPublisherById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Publisher](database.Tables.Publisher, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Publisher not found", "error": true})
@@ -240,7 +241,7 @@ func PublisherHandler(rg *gin.RouterGroup) {
 			}
 
 			// delete the publisher
-			_, err = operations.DeletePublisher(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.Publisher, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

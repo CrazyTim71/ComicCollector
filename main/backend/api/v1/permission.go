@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -20,14 +21,14 @@ import (
 
 func PermissionsHandler(rg *gin.RouterGroup) {
 	rg.GET("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			allPermissions, err := operations.GetAllPermissions(database.MongoDB)
+			allPermissions, err := operations.GetAll[models.Permission](database.Tables.Permission)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -42,7 +43,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.GET("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
@@ -57,7 +58,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			permission, err := operations.GetPermissionById(database.MongoDB, objID)
+			permission, err := operations.GetOneById[models.Permission](database.Tables.Permission, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Permission not found", "error": true})
@@ -72,7 +73,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.POST("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
@@ -101,7 +102,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the permission already exists
-			_, err = operations.GetPermissionByName(database.MongoDB, requestBody.Name)
+			_, err = operations.GetOneByFilter[models.Permission](database.Tables.Permission, bson.M{"name": requestBody.Name})
 			if err == nil {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Permission already exists", "error": true})
 				return
@@ -127,7 +128,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			newPermission.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newPermission.CreatedBy = currentUser
 
-			err = operations.InsertPermission(database.MongoDB, newPermission)
+			_, err = operations.InsertOne(database.Tables.Permission, newPermission)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -138,7 +139,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.PATCH("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
@@ -190,7 +191,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the permission already exists
-			_, err = operations.GetPermissionById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Permission](database.Tables.Permission, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Permission not found", "error": true})
@@ -198,7 +199,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			}
 
 			// update the permission
-			result, err := operations.UpdatePermission(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.Permission, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -213,7 +214,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.DELETE("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyUserGroup(groups.Administrator),
 		middleware.VerifyHasAllPermission(
@@ -230,7 +231,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the permission exists
-			_, err = operations.GetPermissionById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Permission](database.Tables.Permission, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Permission not found", "error": true})
@@ -238,7 +239,7 @@ func PermissionsHandler(rg *gin.RouterGroup) {
 			}
 
 			// delete the permission
-			_, err = operations.DeletePermission(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.Permission, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

@@ -11,6 +11,7 @@ import (
 	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -20,13 +21,13 @@ import (
 
 func LocationHandler(rg *gin.RouterGroup) {
 	rg.GET("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
 		),
 		func(c *gin.Context) {
-			locations, err := operations.GetAllLocations(database.MongoDB)
+			locations, err := operations.GetAll[models.Location](database.Tables.Location)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -41,7 +42,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.GET("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -55,7 +56,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			location, err := operations.GetLocationById(database.MongoDB, objID)
+			location, err := operations.GetOneById[models.Location](database.Tables.Location, objID)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Location not found", "error": true})
@@ -70,7 +71,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.POST("",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -98,7 +99,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the location already exists
-			_, err = operations.GetLocationByName(database.MongoDB, requestBody.Name)
+			_, err = operations.GetOneByFilter[models.Location](database.Tables.Location, bson.M{"name": requestBody.Name})
 			if err == nil {
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Location already exists", "error": true})
 				return
@@ -124,7 +125,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 			newLocation.CreatedAt = utils.ConvertToDateTime(time.DateTime, time.Now())
 			newLocation.CreatedBy = currentUser
 
-			err = operations.InsertLocation(database.MongoDB, newLocation)
+			_, err = operations.InsertOne(database.Tables.Location, newLocation)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -135,7 +136,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.PATCH("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -186,7 +187,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 			updateData["updated_by"] = currentUser
 
 			// check if the location already exists
-			_, err = operations.GetLocationById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Location](database.Tables.Location, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Location not found", "error": true})
@@ -194,7 +195,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 			}
 
 			// update the location
-			result, err := operations.UpdateLocation(database.MongoDB, objID, updateData)
+			result, err := operations.UpdateOne(database.Tables.Location, objID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -209,7 +210,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.DELETE("/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -225,7 +226,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 			}
 
 			// check if the location exists
-			_, err = operations.GetLocationById(database.MongoDB, objID)
+			_, err = operations.GetOneById[models.Location](database.Tables.Location, objID)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusBadRequest, gin.H{"msg": "Location not found", "error": true})
@@ -233,7 +234,7 @@ func LocationHandler(rg *gin.RouterGroup) {
 			}
 
 			// delete the location
-			_, err = operations.DeleteLocation(database.MongoDB, objID)
+			_, err = operations.DeleteOne(database.Tables.Location, bson.M{"_id": objID})
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})

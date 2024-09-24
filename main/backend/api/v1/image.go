@@ -2,6 +2,7 @@ package v1
 
 import (
 	"ComicCollector/main/backend/database"
+	"ComicCollector/main/backend/database/models"
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions"
 	"ComicCollector/main/backend/database/permissions/groups"
@@ -45,7 +46,7 @@ func mimeFromIncipit(incipit []byte) string {
 
 func ImageHandler(rg *gin.RouterGroup) {
 	rg.GET("/cover/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -74,7 +75,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 		})
 
 	rg.POST("/cover/:bookid",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -178,7 +179,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 			fileID := uploadStream.FileID
 
 			// check if the book exists
-			_, err = operations.GetBookById(database.MongoDB, bookId)
+			_, err = operations.GetOneById[models.Book](database.Tables.Book, bookId)
 			if err != nil {
 				if errors.Is(err, mongo.ErrNoDocuments) {
 					c.JSON(http.StatusNotFound, gin.H{"msg": "Book not found", "error": true})
@@ -195,7 +196,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 				"updated_at":  utils.ConvertToDateTime(time.DateTime, time.Now()),
 			}
 
-			_, err = operations.UpdateBook(database.MongoDB, bookId, updateData)
+			_, err = operations.UpdateOne(database.Tables.Book, bookId, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
@@ -212,7 +213,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 	rg.PATCH("/cover/:bookid")
 
 	rg.DELETE("/cover/:id",
-		middleware.CheckJwtToken(),
+		middleware.JWTAuth(),
 		middleware.DenyUserGroup(groups.RestrictedUser),
 		middleware.VerifyHasAllPermission(
 			permissions.BasicApiAccess,
@@ -248,7 +249,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 			}
 
 			// remove the image from the book
-			book, err := operations.GetBookByCoverImage(database.MongoDB, objID)
+			book, err := operations.GetOneByFilter[models.Book](database.Tables.Book, bson.M{"cover_image": objID})
 			if err != nil {
 				// if the book is not found, the image was not associated with any book
 				if !errors.Is(err, mongo.ErrNoDocuments) {
@@ -272,7 +273,7 @@ func ImageHandler(rg *gin.RouterGroup) {
 				"updated_at":  utils.ConvertToDateTime(time.DateTime, time.Now()),
 				"updated_by":  currentUser,
 			}
-			_, err = operations.UpdateBook(database.MongoDB, book.ID, updateData)
+			_, err = operations.UpdateOne(database.Tables.Book, book.ID, updateData)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Database error", "error": true})
