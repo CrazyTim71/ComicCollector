@@ -107,7 +107,7 @@ func PerformFirstRunTasks() error {
 func createAdminUser() (models.User, error) {
 	var adminUser models.User
 
-	randomPW := crypt.GenerateRandomPassword(15, true, true)
+	randomPW := utils.GenerateRandomPassword(15, true, true)
 	hashedPW, err := crypt.HashPassword(randomPW)
 	if err != nil {
 		return adminUser, err
@@ -130,7 +130,7 @@ func createAdminUser() (models.User, error) {
 func createNormalUser() (models.User, error) {
 	var normalUser models.User
 
-	randomPW := crypt.GenerateRandomPassword(15, true, true)
+	randomPW := utils.GenerateRandomPassword(15, true, true)
 	hashedPW, err := crypt.HashPassword(randomPW)
 	if err != nil {
 		return normalUser, err
@@ -152,7 +152,7 @@ func createNormalUser() (models.User, error) {
 func createRestrictedUser() (models.User, error) {
 	var restrictedUser models.User
 
-	randomPW := crypt.GenerateRandomPassword(15, true, true)
+	randomPW := utils.GenerateRandomPassword(15, true, true)
 	hashedPW, err := crypt.HashPassword(randomPW)
 	if err != nil {
 		return restrictedUser, err

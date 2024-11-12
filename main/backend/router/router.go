@@ -9,7 +9,6 @@ import (
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
 	"ComicCollector/main/backend/utils/env"
-	"ComicCollector/main/backend/utils/webcontext"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -107,7 +106,7 @@ func InitFrontendRoutes(r *gin.Engine) bool {
 	r.GET("/dashboard", middleware.JWTAuth(), func(c *gin.Context) {
 		// get the userId
 		// because of middleware.JWTAuth() we can safely assume that the user id logged in
-		userId, err := webcontext.GetUserId(c)
+		userId, err := utils.GetUserId(c)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})

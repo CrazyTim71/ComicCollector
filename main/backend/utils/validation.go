@@ -5,7 +5,6 @@ import (
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/JoiHelper"
 	"errors"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
@@ -63,7 +62,12 @@ func ValidateRequestBody(requestBody interface{}, checkObjectIdsForExistence boo
 				return errors.New(v.Type().Field(i).Name + " is an array of unknown type")
 			}
 			if field.Interface().(primitive.ObjectID).IsZero() {
-				return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+				if isRequired {
+					return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+				} else {
+					// Skip validation if the field is not required
+					continue
+				}
 			}
 			if checkObjectIdsForExistence {
 				// check if the objectID is valid
@@ -82,9 +86,8 @@ func ValidateRequestBody(requestBody interface{}, checkObjectIdsForExistence boo
 				case "Authors":
 					modelType = "Author"
 				default:
-					return errors.New("unknown model type")
+					return errors.New("unknown model type: " + v.Type().Field(i).Name)
 				}
-				fmt.Print(modelType)
 
 				if !operations.CheckIfExists(database.MongoDB, modelType, bson.M{"_id": field.Interface().(primitive.ObjectID)}) {
 					return errors.New(v.Type().Field(i).Name + " does not exist")
@@ -97,14 +100,23 @@ func ValidateRequestBody(requestBody interface{}, checkObjectIdsForExistence boo
 					// only check if the field is required in case it is empty
 					if isRequired {
 						return errors.New(v.Type().Field(i).Name + " is empty")
-					} // Skip validation if the field is not required
-					continue
+					} else {
+						// Skip validation if the field is not required
+						continue
+					}
 				}
+
 				if fieldType.Elem() != reflect.TypeOf(primitive.ObjectID{}) {
 					return errors.New(v.Type().Field(i).Name + " is a slice of unknown type")
 				}
+
 				if ContainsNilObjectID(field.Interface().([]primitive.ObjectID)) {
-					return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+					if isRequired {
+						return errors.New(v.Type().Field(i).Name + " contains an invalid ObjectID")
+					} else {
+						// Skip validation if the field is not required
+						continue
+					}
 				}
 			} else if field.Type().Elem().Kind() == reflect.Uint8 { // Check for []byte (slice of bytes)
 				if len(field.Interface().([]byte)) == 0 {
@@ -115,7 +127,26 @@ func ValidateRequestBody(requestBody interface{}, checkObjectIdsForExistence boo
 			}
 		case reflect.TypeOf(primitive.DateTime(0)).Kind():
 			if field.Interface().(primitive.DateTime) == primitive.DateTime(0) {
-				return errors.New(v.Type().Field(i).Name + " is invalid")
+				if isRequired {
+					return errors.New(v.Type().Field(i).Name + " is invalid")
+				} else {
+					// Skip validation if the field is not required
+					continue
+				}
+			}
+		case reflect.Ptr:
+			if field.Type().Elem().Kind() == reflect.Bool {
+				// Check if the pointer is nil (i.e., not provided in the request)
+				if field.IsNil() {
+					if isRequired {
+						return errors.New(v.Type().Field(i).Name + " is required")
+					} else {
+						// Skip validation if the field is not required
+						continue
+					}
+				}
+			} else {
+				return errors.New(v.Type().Field(i).Name + " is a pointer of unknown type")
 			}
 		// TODO: add case for byte
 		default:
@@ -163,6 +194,12 @@ func CleanEmptyFields(data interface{}) bson.M {
 				result[fieldName] = field.Interface()
 			}
 			continue
+		}
+
+		if fieldType.Kind() == reflect.Ptr {
+			if !field.IsNil() {
+				result[fieldName] = field.Elem().Interface() // Add the value of the pointer
+			}
 		}
 
 		// Check if the field is empty. We only add non-empty fields to the result.

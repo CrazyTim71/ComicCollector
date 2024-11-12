@@ -6,12 +6,12 @@ import (
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/utils/JoiHelper"
 	"ComicCollector/main/backend/utils/crypt"
+	"ComicCollector/main/backend/utils/crypt/auth"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // LoginHandler api/v1/login
@@ -55,26 +55,12 @@ func LoginHandler(rg *gin.RouterGroup) {
 			if crypt.CheckPasswordHash(password, existingUser.Password) {
 
 				// generate a jwt token that will authenticate the user
-				jwtToken, err := crypt.GenerateJwtToken(existingUser.ID)
+				err = auth.GenerateTokens(c, existingUser.ID)
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"msg": "Failed to generate a token", "error": true})
 					log.Println(err)
 					return
 				}
-
-				// save the jwt token as cookie (valid for 24 hours)
-				duration := 24 * time.Hour
-				cookie := http.Cookie{
-					Name:     "auth_token",
-					Value:    jwtToken,
-					Path:     "/",
-					Domain:   "", // Set your domain if needed
-					Expires:  time.Now().Add(duration),
-					SameSite: http.SameSiteLaxMode,
-					Secure:   true, // Ensure you use HTTPS
-					HttpOnly: true,
-				}
-				http.SetCookie(c.Writer, &cookie)
 
 				c.Redirect(http.StatusSeeOther, "/dashboard")
 				return

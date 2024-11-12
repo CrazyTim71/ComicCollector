@@ -26,6 +26,7 @@ type TableStruct struct {
 	Publisher   string
 	Role        string
 	User        string
+	AuthToken   string
 }
 
 var Tables = TableStruct{
@@ -40,6 +41,7 @@ var Tables = TableStruct{
 	Publisher:   "publisher",
 	Role:        "role",
 	User:        "user",
+	AuthToken:   "auth_token",
 }
 
 func InitDatabase() bool {

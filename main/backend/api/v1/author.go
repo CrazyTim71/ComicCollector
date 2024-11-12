@@ -8,7 +8,6 @@ import (
 	"ComicCollector/main/backend/database/permissions/groups"
 	"ComicCollector/main/backend/middleware"
 	"ComicCollector/main/backend/utils"
-	"ComicCollector/main/backend/utils/webcontext"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -111,7 +110,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			currentUser, err := webcontext.GetUserId(c)
+			currentUser, err := utils.GetUserId(c)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})
@@ -177,7 +176,7 @@ func AuthorHandler(rg *gin.RouterGroup) {
 				return
 			}
 
-			currentUser, err := webcontext.GetUserId(c)
+			currentUser, err := utils.GetUserId(c)
 			if err != nil {
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal error", "error": true})

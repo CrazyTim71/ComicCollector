@@ -6,7 +6,7 @@ import (
 	"ComicCollector/main/backend/database/operations"
 	"ComicCollector/main/backend/database/permissions"
 	"ComicCollector/main/backend/database/permissions/groups"
-	"ComicCollector/main/backend/utils/webcontext"
+	"ComicCollector/main/backend/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,7 +27,7 @@ func VerifyHasOnePermission(requiredPermissions ...permissions.Permission) gin.H
 		}
 
 		// get the userId
-		userId, err := webcontext.GetUserId(c)
+		userId, err := utils.GetUserId(c)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
@@ -88,7 +88,7 @@ func VerifyHasAllPermission(requiredPermissions ...permissions.Permission) gin.H
 			return
 		}
 
-		userId, err := webcontext.GetUserId(c)
+		userId, err := utils.GetUserId(c)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
@@ -166,7 +166,7 @@ func VerifyUserGroup(group groups.UserGroup) gin.HandlerFunc {
 			return
 		}
 
-		userId, err := webcontext.GetUserId(c)
+		userId, err := utils.GetUserId(c)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized", "error": true})
@@ -202,7 +202,7 @@ func DenyUserGroup(group groups.UserGroup) gin.HandlerFunc {
 			return
 		}
 
-		userId, err := webcontext.GetUserId(c)
+		userId, err := utils.GetUserId(c)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "An error occurred", "error": true})

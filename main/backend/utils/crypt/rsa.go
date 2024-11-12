@@ -1,17 +1,14 @@
 package crypt
 
 import (
+	"ComicCollector/main/backend/utils/crypt/auth"
 	"ComicCollector/main/backend/utils/env"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"os"
-	"time"
 )
 
 var rsaKey *rsa.PrivateKey = nil
@@ -35,6 +32,7 @@ func InitRSAKey() bool {
 	}
 
 	rsaKey = key
+	auth.KeySetup(rsaKey)
 
 	return true
 }
@@ -66,7 +64,11 @@ func generateRSAKey(filepath string) error {
 	}
 
 	// close the file
-	pemPrivateFile.Close()
+	err = pemPrivateFile.Close()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	log.Println("A new RSA key has been generated successfully")
 
@@ -90,42 +92,4 @@ func loadRSAKey(filepath string) (*rsa.PrivateKey, error) {
 	}
 
 	return privateKey, nil
-}
-
-func GenerateJwtToken(userId primitive.ObjectID) (string, error) {
-	claims := jwt.MapClaims{
-		"userId": userId,
-		"iss":    "ComicCollector",
-		"exp":    time.Now().Add(time.Hour * 24).Unix(), // valid 24 hours
-		"iat":    time.Now().Unix(),
-		"i am":   "your father :O",
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
-	tokenString, err := token.SignedString(rsaKey)
-	if err != nil {
-		log.Println(err)
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-func ParseJwt(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, errors.New("got unexpected jwt signing method")
-		}
-		return &rsaKey.PublicKey, nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	} else {
-		return nil, err
-	}
 }
