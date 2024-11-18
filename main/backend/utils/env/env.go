@@ -21,7 +21,7 @@ var RSA_FILENAME = "rsa_private_key.pem"
 var SIGNUP_ENABLED = false
 var TIMEZONE = "Europe/Berlin"
 
-var Files embed.FS
+var FrontendFiles embed.FS
 var Timezone *time.Location
 
 func InitEnvironment() bool {

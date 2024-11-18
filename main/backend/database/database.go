@@ -55,7 +55,7 @@ func InitDatabase() bool {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	dbName := env.GetDatabaseName()

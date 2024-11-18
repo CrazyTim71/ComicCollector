@@ -23,6 +23,14 @@ import (
 
 // RegisterHandler api/v1/register
 func RegisterHandler(rg *gin.RouterGroup) {
+	rg.GET("check", func(c *gin.Context) {
+		if env.GetSignupEnabled() {
+			c.JSON(http.StatusOK, gin.H{"signupEnabled": true})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"signupEnabled": false})
+		}
+	})
+
 	rg.POST("", func(c *gin.Context) {
 		if !env.GetSignupEnabled() {
 			c.JSON(http.StatusForbidden, gin.H{"msg": "Signup is disabled", "error": true})

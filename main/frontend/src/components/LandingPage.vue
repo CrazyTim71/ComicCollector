@@ -23,7 +23,6 @@
 
 <script>
 import axios from 'axios';
-import.meta.env.VUE_APP_API_BASE_URL
 import '../css/LandingPage.css'
 
 export default {
