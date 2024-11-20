@@ -1,1 +1,1 @@
-{"root":["./src/main.ts","./src/router.ts","./src/shims-vue.d.ts","./src/vite-env.d.ts","./src/app.vue","./src/components/landingpage.vue","./src/components/login.vue"],"errors":true,"version":"5.6.2"}
+{"root":["./src/main.ts","./src/router.ts","./src/shims-vue.d.ts","./src/vite-env.d.ts","./src/app.vue","./src/components/landingpage.vue","./src/components/login.vue","./src/components/register.vue"],"version":"5.6.2"}
