@@ -21,25 +21,55 @@
     </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import axios from 'axios';
-import '../css/LandingPage.css'
+import { ref, onMounted } from 'vue';
 
-export default {
-    name: 'LandingPage',
-    data() {
-        return {
-            signupEnabled: false
-        };
-    },
-    mounted() {
-        axios.get('/api/v1/register/check')
-            .then(response => {
-                this.signupEnabled = response.data.signupEnabled;
-            })
-            .catch(error => {
-                console.error('Error checking signup status:', error);
-            });
-    }
+const signupEnabled = ref(false);
+
+onMounted(() => {
+    checkSignup();
+});
+
+const checkSignup = () => {
+    axios.get('/api/v1/register/check')
+        .then(response => {
+        signupEnabled.value = response.data.signupEnabled;
+        })
+        .catch(error => {
+        console.error('Error checking signup status:', error);
+    });
 };
+
 </script>
+
+<style scoped>
+/* Background Gradient */
+.gradient {
+    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(233,216,197,1) 0%, rgba(139,201,204,1) 46%, rgba(10,180,214,1) 100%);
+}
+
+/* Custom Button Styles */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    box-shadow: 0 0 10px rgba(0, 91, 187, 0.5);
+}
+
+/* Hero Description */
+.hero-description {
+    color: #f5f5f5;
+}
+
+/* Footer Links */
+.footer-links a {
+    font-size: 0.9rem;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+</style>

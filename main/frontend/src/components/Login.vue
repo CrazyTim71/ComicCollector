@@ -1,39 +1,130 @@
 <template>
-<div class="container vw-100 vh-100">
-    <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-        <div class="card-header">
-            <h3 class="text-center">Login</h3>
-        </div>
-        <div class="card-body">
-            <form @submit.prevent="login">
-            <div class="form-group mb-3">
-                <label for="email">Email</label>
-                <input type="email" v-model="email" class="form-control" id="email" required />
-            </div>
-            <div class="form-group mb-3">
-                <label for="password">Password</label>
-                <input type="password" v-model="password" class="form-control" id="password" required />
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-            </form>
-        </div>
-        </div>
+  <div class="vh-100 d-flex flex-column justify-content-center align-items-center gradient">
+    <div class="text-center mb-5">
+        <img src="/favicon.ico" alt="Logo" onclick="window.location.href='/'" class="mb-2" style="width: 100px; height: auto; ">
+        <h2 class="text-white">Comic Collector</h2>
     </div>
+
+    <div id="app" class="p-5 rounded shadow bg-white" style="width: 450px;">
+      <div class="text-center mb-4">
+          <h1 class="mb-3">Login</h1>
+      </div>
+      <div class="form-floating mb-3">
+          <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="Username">
+          <label for="floatingInput">Username</label>
+      </div>
+      <div class="form-floating mb-3">
+          <input v-model="password" type="password" class="form-control" id="floatingPassword" placeholder="Password" @keyup.enter="login()">
+          <label for="floatingPassword">Password</label>
+      </div>
+      <div class="d-flex justify-content-center">
+          <button @click="login()" class="btn btn-primary w-100 btn-custom">Submit</button>
+      </div>
+
+      <div v-if="error" id="error-message" style="color: red;" class="text-center mt-3 mb-3">
+          {{ errorMsg }}
+      </div>
     </div>
-</div>
+
+    <div v-if="signupEnabled" class="text-center mt-3">
+      <a href="/register" class="text-white">Create an Account</a>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
+  import axios from 'axios';
 
-    const email = ref('');
-    const password = ref('');
+  const username = ref('');
+  const password = ref('');
+  const error = ref(false);
+  let errorMsg = '';
+  const signupEnabled = ref(false);
 
-    const login = () => {
-        console.log('Email:', email.value);
-        console.log('Password:', password.value);
-        // Add your login logic here
-    };
+  onMounted(() => {
+    checkSignup();
+  });
+
+  const checkSignup = () => {
+    axios.get('/api/v1/register/check')
+      .then(response => {
+        signupEnabled.value = response.data.signupEnabled;
+      })
+      .catch(error => {
+        console.error('Error checking signup status:', error);
+      });
+  };
+
+  const login = async () => {
+    errorMsg = '';
+
+    if (username.value === "" || password.value === "") {
+      errorMsg = 'Please fill in all fields';
+      error.value = true;
+      return;
+    }
+
+    try {
+        let response = await fetch('/api/v1/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username.value,
+                password: password.value
+            })
+        });
+
+        if (response.status === 302 || response.status === 303) {
+            window.location.href = response.headers.get('Location') || '/';
+        } else if (response.ok) {
+            window.location.href = response.url;
+        } else {
+            const result = await response.json();
+            errorMsg = result.msg;
+            error.value = true;
+
+            password.value = "";
+            return;
+        }
+    } catch (exception) {
+      console.error('An unexpected error occurred:', exception);
+      errorMsg = 'An unexpected error occurred.';
+      error.value = true;
+    }
+  };
+
 </script>
+
+<style scoped>
+/* Background Gradient */
+.gradient {
+    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(233,216,197,1) 0%, rgba(139,201,204,1) 46%, rgba(10,180,214,1) 100%);
+}
+
+/* Custom Button Styles */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    box-shadow: 0 0 10px rgba(0, 91, 187, 0.5);
+}
+
+/* Hero Description */
+.hero-description {
+    color: #f5f5f5;
+}
+
+/* Footer Links */
+.footer-links a {
+    font-size: 0.9rem;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+</style>
