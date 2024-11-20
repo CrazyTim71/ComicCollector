@@ -21,9 +21,21 @@ To get started with ComicCollector, follow these steps:
     ```sh
     cd ComicCollector
     ```
-3. Install the necessary dependencies:
+3. Install the necessary Go dependencies:
     ```sh
     go mod tidy
+    ```
+4. Navigate to the frontend directory:
+    ```sh
+    cd main/frontend
+    ```
+5. Install the necessary Node.js dependencies:
+    ```sh
+    npm install
+    ```
+6. Build the frontend:
+    ```sh
+    npm run build
     ```
 
 ## Usage
