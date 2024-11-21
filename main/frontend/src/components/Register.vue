@@ -24,64 +24,69 @@
             <div class="d-flex justify-content-center">
                 <button @click="register()" class="btn btn-primary w-100 btn-custom">Submit</button>
             </div>
-            <div v-if="error" id="error-message" style="color: red;" class="text-center mt-3 mb-3">
-                {{ errorMsg }}
-            </div>
+            <div v-if="errorMsg" class="alert alert-danger text-center mt-3 mb-0" role="alert">{{ errorMsg }}</div>
         </div>
     </div>
 </template>
     
-<script setup lang="ts">
-import { ref } from 'vue';
+<script lang="ts">
+import { ref, defineComponent } from 'vue';
+import { useHead } from '@vueuse/head';
 import axios from 'axios';
 
-const username = ref('');
-const password = ref('');
-const passwordRepeated = ref('');
-let error = ref(false);
-let errorMsg = '';
+export default defineComponent({
+  name: 'Login',
+  setup() {
+    const username = ref('')
+    const password = ref('')
+    const passwordRepeated = ref('')
+    const errorMsg = ref('')
 
-const register = async () => {
-    errorMsg = '';
+    useHead({
+        title: 'Register | Comic Collector',
+    });
 
-    if (username.value === "" || password.value === "" || passwordRepeated.value === "") {
-      errorMsg = 'Please fill in all fields';
-      error.value = true;
-      return;
-    }
+    const register = async () => {
+        errorMsg.value = ''
 
-    if (password.value !== passwordRepeated.value) {
-        errorMsg = 'Passwords do not match';
-        error.value = true;
-        return;
-    }
+        if (username.value === '' || password.value === '' || passwordRepeated.value === '') {
+            errorMsg.value = 'Please fill in all fields'
+            return
+        }
 
-    try {
-        let response = await axios.post('/api/v1/register', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        if (password.value !== passwordRepeated.value) {
+            errorMsg.value = 'Passwords do not match'
+            return
+        }
+
+        try {
+            let response = await axios.post('/api/v1/register', {
                 username: username.value,
                 password: password.value,
                 passwordRepeated: passwordRepeated.value
             })
-        });
-
-        if (response.status === 302 || response.status === 303) {
-            window.location.href = response.headers['location'] || '/';
-        } else if (response.status >= 200 && response.status < 300) {
-            window.location.href = response.data.url || '/';
-        } else {
-            errorMsg = response.data.msg;
-            error.value = true;
+            
+            if (response.status === 302 || response.status === 303) {
+                window.location.href = response.headers['location'] || '/';
+            } else if (response.status >= 200 && response.status < 300) {
+                window.location.href = response.data.url || '/';
+            } else {
+                errorMsg.value = response.data.msg;
+            }
+        } catch (error) {
+            errorMsg.value = 'Registration failed'
         }
-    } catch (exception) {
-      console.error('An unexpected error occurred:', exception);
-      errorMsg = 'An unexpected error occurred.';
-      error.value = true;
     }
-};
+
+    return {
+        username,
+        password,
+        passwordRepeated,
+        errorMsg,
+        register
+    }
+  }
+});
 </script>
 
 <style scoped>

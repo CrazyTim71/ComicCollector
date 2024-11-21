@@ -21,9 +21,7 @@
           <button @click="login()" class="btn btn-primary w-100 btn-custom">Submit</button>
       </div>
 
-      <div v-if="error" id="error-message" style="color: red;" class="text-center mt-3 mb-3">
-          {{ errorMsg }}
-      </div>
+      <div v-if="errorMsg" class="alert alert-danger text-center mt-3 mb-0" role="alert">{{ errorMsg }}</div>
     </div>
 
     <div v-if="signupEnabled" class="text-center mt-3">
@@ -32,36 +30,42 @@
   </div>
 </template>
 
-<script setup lang="ts">
-  import { ref, onMounted } from 'vue';
-  import axios from 'axios';
+<script lang="ts">
+import { ref, onMounted, defineComponent } from 'vue';
+import { useHead } from '@vueuse/head';
+import axios from 'axios';
 
-  const username = ref('');
-  const password = ref('');
-  const error = ref(false);
-  let errorMsg = '';
-  const signupEnabled = ref(false);
+export default defineComponent({
+  name: 'Login',
+  setup() {
+    const username = ref('');
+    const password = ref('');
+    const errorMsg = ref('');
+    const signupEnabled = ref(false);
 
-  onMounted(() => {
-    checkSignup();
-  });
+    useHead({
+        title: 'Login | Comic Collector',
+    });
 
-  const checkSignup = () => {
-    axios.get('/api/v1/register/check')
-      .then(response => {
-        signupEnabled.value = response.data.signupEnabled;
-      })
-      .catch(error => {
-        console.error('Error checking signup status:', error);
-      });
-  };
+    const checkSignup = () => {
+      axios.get('/api/v1/register/check')
+        .then(response => {
+          signupEnabled.value = response.data.signupEnabled;
+        })
+        .catch(error => {
+          console.error('Error checking signup status:', error);
+        });
+    };
 
-  const login = async () => {
-    errorMsg = '';
+    onMounted(() => {
+      checkSignup();
+    });
+
+    const login = async () => {
+      errorMsg.value = '';
 
     if (username.value === "" || password.value === "") {
-      errorMsg = 'Please fill in all fields';
-      error.value = true;
+      errorMsg.value = 'Please fill in all fields';
       return;
     }
 
@@ -83,19 +87,27 @@
             window.location.href = response.url;
         } else {
             const result = await response.json();
-            errorMsg = result.msg;
-            error.value = true;
+            errorMsg.value = result.msg;
 
             password.value = "";
             return;
         }
     } catch (exception) {
       console.error('An unexpected error occurred:', exception);
-      errorMsg = 'An unexpected error occurred.';
-      error.value = true;
+      errorMsg.value = 'An unexpected error occurred.';
     }
-  };
+    };
 
+    return {
+      username,
+      password,
+      errorMsg,
+      signupEnabled,
+      checkSignup,
+      login
+    };
+  }
+});
 </script>
 
 <style scoped>

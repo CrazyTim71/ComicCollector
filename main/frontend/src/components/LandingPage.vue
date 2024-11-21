@@ -1,4 +1,4 @@
-<template>
+<template>   
     <div class="vh-100 d-flex flex-column justify-content-center align-items-center gradient">
         <div class="text-center mb-4">
             <img src="/favicon.ico" alt="Logo" class="mb-2" style="width: 100px; height: auto;">
@@ -6,7 +6,7 @@
 
         <!-- Hero Section -->
         <div class="hero-section text-center text-white">
-                <h1 class="fs-1">Welcome to Comic Collector</h1>
+                <h1 class="fs-1">Welcome to {{ title }}</h1>
                 <p class="hero-description fs-5 mb-4 fw-light"><em>Your ultimate app for managing comic book collections</em></p>
                 <a href="/login" class="btn btn-primary btn-lg mt-4">Login</a>
             </div>
@@ -21,26 +21,45 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { useHead } from '@vueuse/head';
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
 
-const signupEnabled = ref(false);
-
-onMounted(() => {
-    checkSignup();
+export default defineComponent({
+    name: 'LandingPage',
+    setup() {
+        useHead({
+            title: 'Comic Collector',
+            meta: [
+                {
+                    name: 'description',
+                    content: 'Your ultimate app for managing comic book collections'
+                }
+            ]
+        });
+    },
+    data() {
+        return {
+            signupEnabled: false,
+            title: 'Comic Collector'
+        };
+    },
+    methods: {
+        checkSignup() {
+            axios.get('/api/v1/register/check')
+                .then(response => {
+                    this.signupEnabled = response.data.signupEnabled;
+                })
+                .catch(error => {
+                    console.error('Error checking signup status:', error);
+                });
+        }
+    },
+    mounted() {
+        this.checkSignup();
+    }
 });
-
-const checkSignup = () => {
-    axios.get('/api/v1/register/check')
-        .then(response => {
-        signupEnabled.value = response.data.signupEnabled;
-        })
-        .catch(error => {
-        console.error('Error checking signup status:', error);
-    });
-};
-
 </script>
 
 <style scoped>
